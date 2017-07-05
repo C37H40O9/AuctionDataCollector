@@ -143,7 +143,7 @@ newtype AuctionS = AuctionS {auctions :: [Auction]} deriving (Eq, Show)
 
 newtype ItemS = ItemS {items :: [Item]} deriving (Eq, Show)
 
---newtype ConnectedRealms =  ConnectedRealms {connectedRealms :: [String]} deriving (Eq, Show)
+
 
 type Region = String
 
@@ -154,12 +154,7 @@ data Realm = Realm
 
 newtype Realms = Realms {realms ::[Realm]} deriving (Eq, Show) 
 
-{-
-instance FromJSON ConnectedRealms where 
-    parseJSON = withObject "connected_realms" $ \o -> do
-        connectedRealms <- o .: "connected_realms"
-        return ConnectedRealms{..}
--}
+
 
 instance FromJSON AuctionS where
     parseJSON = withObject "auctions" $ \o -> do
@@ -192,12 +187,7 @@ instance FromJSON Realm where
            slug <- o .: "slug"
            connectedRealms <- o .: "connected_realms"
            return Realm{..}
-{-
-instance FromJSON  Realms where
-    parseJSON = withObject "r" $ \o -> do
-        realms <- o .: "realms"
-        return Realms{..}
--}
+
 
 apikey :: String
 apikey = "vrh7sn2zntq4vu7wntkxmd64jwq2ahny"
