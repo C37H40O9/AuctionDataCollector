@@ -276,6 +276,3 @@ myfun = do
     case res of 
         Nothing -> putStrLn "No realms"
         Just x -> mapM_ print $  filterRealms x
-    {--case res of
-        Left e -> print e
-        Right r -> mapM_ print $ filterRealms $ realms r --}
