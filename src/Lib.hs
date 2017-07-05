@@ -1,9 +1,9 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
+--{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TransformListComp #-}
+--{-# LANGUAGE TransformListComp #-}
 --{-# LANGUAGE OverloadedRecordFields #-}
 
 module Lib
@@ -11,19 +11,22 @@ module Lib
 
 import qualified Data.Map.Strict as M
 import qualified Data.Sequence as S
-import Data.Text (Text)
+--import Data.Text (Text)
 import qualified Data.ByteString.Lazy as B
 import Data.Aeson
 import Data.Aeson.Types
-import GHC.Exts (sortWith, groupWith, the)
+--import GHC.Exts (sortWith, groupWith, the)
 import Data.Monoid ((<>))
 import Data.List (foldl')
-import Network.HTTP.Client (Manager, newManager, defaultManagerSettings, setRequestIgnoreStatus)
+import Network.HTTP.Client ( setRequestIgnoreStatus)
 import qualified Network.HTTP.Conduit as C
 import Control.Monad.Trans.Resource
-import qualified Data.Text as T
-import qualified Data.Text.IO as T
-import Data.Either (rights)
+import Control.Applicative (liftA2)
+--import qualified Data.Text as T
+--import qualified Data.Text.IO as T
+--import Data.Either (rights)
+--import Control.Comonad (extract)
+import Control.Concurrent.MVar
 
 
 
@@ -33,14 +36,14 @@ someFunc = do
     res <- itemsDec
     case res of
         Left err -> return []
-        Right i -> return $ map Lib.id (items i)
+        Right i -> return $ map iid (items i)
 
 inames :: IO [(Int,String)]
 inames = do
     res <- itemsDec
     case res of
         Left err -> return []
-        Right i -> return $ map (\x -> (Lib.id x, name x)) (items i)
+        Right i -> return $ map (liftA2 (,) iid  name ) (items i)
 
 
 someFunc2 :: IO ()
@@ -89,11 +92,11 @@ data WBox = WBox { ic   :: Int  -- items count
                  , maxW :: Int } deriving Show
                  
 
-printItem :: Item -> IO ()
-printItem = putStrLn . (\x -> "name: " <> name x <> " id: " <> show (Lib.id x))
+--printItem :: Item -> IO ()
+--printItem = putStrLn . (\x -> "name: " <> name x <> " id: " <> show (Lib.id x))
 
-printAuc :: Auction -> IO ()
-printAuc = putStrLn . (\x -> "itemId: " <> show (itemId x) <> " bid: " <> show (bid x) <> " buyout: " <> show (buyout x) <> " quantity: " <> show (quantity x))
+--printAuc :: Auction -> IO ()
+--printAuc = putStrLn . (\x -> "itemId: " <> show (itemId x) <> " bid: " <> show (bid x) <> " buyout: " <> show (buyout x) <> " quantity: " <> show (quantity x))
 
 itemsFile :: FilePath
 itemsFile = "items.json"
@@ -110,9 +113,6 @@ realmsFile = "realms.json"
 getRealmsJSON :: IO B.ByteString
 getRealmsJSON = B.readFile realmsFile
 
---realmsDec :: Maybe [ConnectedRealms]
---realmsDec =  parseMaybe realms 
-
 aucsFile :: FilePath
 aucsFile = "auctions.json"
 
@@ -126,7 +126,7 @@ aucToTuple :: Auction -> (Int,Int,Int, Int)
 aucToTuple a = (itemId a,bid a, buyout a, quantity a)
 
 data Item = Item { name :: String
-                 , id :: Int
+                 , iid :: Int
                  } deriving (Eq, Show)
 
 data Auction = Auction { bid :: Int
@@ -136,47 +136,30 @@ data Auction = Auction { bid :: Int
                        } deriving (Eq, Show)
 
 data IStats = IStats { bid' :: S.Seq Int
-                     , buyout' :: S.Seq Int
-                     --, quantity' :: Int
+                     , buyout' :: S.Seq Int                     
                      } deriving (Eq, Show)
-
-aToS :: Auction -> IStats
-aToS a = IStats { bid'    = S.replicate (quantity a) (quot  (bid a)    (quantity a))
-                , buyout' = S.replicate (quantity a) (quot  (buyout a) (quantity a))
-                --, quantity' = quantity a
-                }
-
-mcon :: IStats -> IStats -> IStats
-mcon  f s = IStats bi bu --q
-    where bi = bid' f S.><  bid' s 
-          bu = buyout' f S.>< buyout' s
-          --q = quantity' f + quantity' s
-
---foldl' :: Foldable t => (b -> a -> b) -> b -> t a -> b
-
-collect ::  [Auction] -> M.Map Int IStats
-collect  = foldl'  (\b a -> M.insertWith mcon (itemId a) (aToS a) b ) M.empty 
 
 newtype AuctionS = AuctionS {auctions :: [Auction]} deriving (Eq, Show)
 
 newtype ItemS = ItemS {items :: [Item]} deriving (Eq, Show)
 
-newtype ConnectedRealms =  ConnectedRealms {connectedRealms :: [String]} deriving (Eq, Show)
+--newtype ConnectedRealms =  ConnectedRealms {connectedRealms :: [String]} deriving (Eq, Show)
 
+type Region = String
 
+data Realm = Realm
+             { rname :: String
+             , slug :: String
+             , connectedRealms :: [String]} deriving (Eq, Show)
 
+newtype Realms = Realms {realms ::[Realm]} deriving (Eq, Show) 
 
---realms :: Value -> Parser [ConnectedRealms]
---realms = withObject "realms" $ \o -> o .: "realms"
-
--- 
-
+{-
 instance FromJSON ConnectedRealms where 
     parseJSON = withObject "connected_realms" $ \o -> do
         connectedRealms <- o .: "connected_realms"
         return ConnectedRealms{..}
-
-
+-}
 
 instance FromJSON AuctionS where
     parseJSON = withObject "auctions" $ \o -> do
@@ -199,55 +182,110 @@ instance FromJSON Auction where
 instance FromJSON Item where
     parseJSON = withObject "items" $ \o -> do
         name <- o .: "name"
-        id <- o .: "id"
+        iid <- o .: "id"
         return Item{..}
 
-apikey :: Text
-apikey = "vrh7sn2zntq4vu7wntkxmd64jwq2ahny"
-
-data Realm = Realm
-             { rname :: Text
-             , slug :: Text
-             , connected_realms :: [Text]} deriving (Eq, Show)
-
-newtype Realms = Realms {realms ::[Realm]} deriving (Eq, Show) 
 
 instance FromJSON Realm where
-    parseJSON = withObject "realm" $ \o -> do
-           --realmsO <- o .: "realms"
+    parseJSON = withObject "realm" $ \o -> do          
            rname <- o .: "name"
            slug <- o .: "slug"
-           connected_realms <- o .: "connected_realms"
+           connectedRealms <- o .: "connected_realms"
            return Realm{..}
-
+{-
 instance FromJSON  Realms where
     parseJSON = withObject "r" $ \o -> do
         realms <- o .: "realms"
         return Realms{..}
+-}
+
+apikey :: String
+apikey = "vrh7sn2zntq4vu7wntkxmd64jwq2ahny"
 
 
+auctionsParser :: Value -> Parser [Auction]
+auctionsParser = withObject "auctionsParser" $ \o -> o .: "auctions"
 
-takeRealms :: Manager -> IO (Either String Realms)
+parseAuctions :: B.ByteString -> Maybe [Auction]
+parseAuctions x = parseMaybe auctionsParser =<< decode x
+
+
+itemsParser :: Value -> Parser [Item]
+itemsParser = withObject "itemsParser" $ \o -> o .: "items"
+
+parseItems :: B.ByteString -> Maybe [Item]
+parseItems x = parseMaybe itemsParser =<< decode x
+
+
+realmsParser :: Value -> Parser [Realm]
+realmsParser = withObject "realmsParser" $ \o -> o .: "realms"
+
+parseRealms :: B.ByteString -> Maybe [Realm]
+parseRealms x = parseMaybe realmsParser =<< decode x
+
+
+aucToIStats :: Auction -> IStats
+aucToIStats a = IStats { bid'    = S.replicate (quantity a) (quot  (bid a)    (quantity a))
+                   , buyout' = S.replicate (quantity a) (quot  (buyout a) (quantity a))                
+                   }
+
+statsConcat :: IStats -> IStats -> IStats
+statsConcat  s1 s2 = IStats bi bu 
+    where bi = bid' s1 S.><  bid' s2 
+          bu = buyout' s1 S.>< buyout' s2
+          
+
+--foldl' :: Foldable t => (b -> a -> b) -> b -> t a -> b
+
+collect ::  [Auction] -> M.Map Int IStats
+collect  = foldl'  (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b ) M.empty 
+
+
+takeRealms :: C.Manager -> IO (Maybe [Realm])
 takeRealms m = do
-    req <- C.parseRequest $ T.unpack $ "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> apikey
+    req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> apikey
     runResourceT $ do
-           response <- C.httpLbs (setRequestIgnoreStatus req) m
-           --print response
-           return $ eitherDecode' $ C.responseBody response
+           response <- C.httpLbs (setRequestIgnoreStatus req) m           
+           return $ parseRealms $ C.responseBody response
+
 
 filterRealms :: [Realm] -> [Realm]
 filterRealms [] = []
 filterRealms (x:xs) = x : t
-    where t = filterRealms $ filter (\y -> slug x `notElem` connected_realms y ) xs
+    where t = filterRealms $ filter (\y -> slug x `notElem` connectedRealms y ) xs
+
+
+takeAuctionInfo :: C.Manager -> Region -> Realm -> IO () -- request realm auction info from bnet api
+takeAuctionInfo m region r = do 
+    req <- C.parseRequest $  "https://" <> region <> ".api.battle.net/wow/auction/data/" <> rname r <> "locale=en_GB&apikey=" <> apikey
+    runResourceT $ do 
+        response <- C.httpLbs (setRequestIgnoreStatus req) m 
+        -- decode auc file info from C.responseBody response here
+        -- create and push new request to queue
+        return ()
+
+
+--funQueue :: MVar (S.Seq (IO ()))
+--funQueue = newMVar S.empty
+
+--counter :: MVar Int
+--initCounter = newMVar 100
+
+addFunToQ :: IO () -> MVar (S.Seq (IO ())) -> IO ()
+addFunToQ f q = do 
+    q' <- takeMVar q 
+    putMVar q $ q' S.|> f 
+
 
 myfun :: IO ()
 myfun = do
+    funQueue <- newMVar S.empty :: IO (MVar (S.Seq (IO ())))
+    counter <- newMVar 100 :: IO (MVar Int)
     manager <- C.newManager C.tlsManagerSettings
     res <- takeRealms manager
-    case res of
+    case res of 
+        Nothing -> putStrLn "No realms"
+        Just x -> mapM_ print $  filterRealms x
+    {--case res of
         Left e -> print e
-        Right r -> mapM_ print $ filterRealms $ realms r
-
-
-
-
+        Right r -> mapM_ print $ filterRealms $ realms r --}
