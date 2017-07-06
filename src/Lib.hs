@@ -1,14 +1,15 @@
 {-# LANGUAGE DataKinds #-}
---{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveAnyClass #-}
 --{-# LANGUAGE TransformListComp #-}
 --{-# LANGUAGE OverloadedRecordFields #-}
 
 module Lib
      where
-
+import GHC.Generics
 import qualified Data.Map.Strict as M
 import qualified Data.Sequence as S
 --import Data.Text (Text)
@@ -21,7 +22,9 @@ import Data.List (foldl')
 import Network.HTTP.Client ( setRequestIgnoreStatus)
 import qualified Network.HTTP.Conduit as C
 import Control.Monad.Trans.Resource
+import Control.Monad.IO.Class
 import Control.Applicative (liftA2)
+import Control.Monad (join)
 --import qualified Data.Text as T
 --import qualified Data.Text.IO as T
 --import Data.Either (rights)
@@ -159,14 +162,14 @@ data Realm = Realm
 newtype Realms = Realms {realms ::[Realm]} deriving (Eq, Show) 
 
 data AucFile = AucFile { url          :: String
-                       , lastModified :: POSIXTime}
+                       , lastModified :: Integer} deriving (Eq, Show, Generic)
 
-instance FromJSON AucFile where 
-    parseJson = withObject "aucfile" $ \o -> do 
+instance FromJSON AucFile {-where 
+    parseJSON = withObject "file" $ \o -> do 
         url <- o .: "url"
         lastModified <- o .: "lastModified"
         return AucFile{..}
-
+-}
 instance FromJSON AuctionS where
     parseJSON = withObject "auctions" $ \o -> do
         auctions <- o .: "auctions"
@@ -205,10 +208,10 @@ apikey = "vrh7sn2zntq4vu7wntkxmd64jwq2ahny"
 
 
 aucFilesParser :: Value -> Parser [AucFile]
-aucFilesParser = withObject "aucFilesParser" $ \o -> o .: "files"
+aucFilesParser = withObject "aucFilesParser" $ \o -> o .:? "files" .!= [AucFile {url = "default", lastModified = 12345}]
 
 parseAucFiles :: B.ByteString -> Maybe [AucFile]
-parseAucFiles x = parseMaybe aucFilseParser =<< decode x
+parseAucFiles x = parseMaybe aucFilesParser =<< decode x
 
 auctionsParser :: Value -> Parser [Auction]
 auctionsParser = withObject "auctionsParser" $ \o -> o .: "auctions"
@@ -262,14 +265,15 @@ filterRealms (x:xs) = x : t
     where t = filterRealms $ filter (\y -> slug x `notElem` connectedRealms y ) xs
 
 
-takeAuctionInfo :: C.Manager -> Region -> Realm -> IO () -- request realm auction info from bnet api
-takeAuctionInfo m region r = do 
-    req <- C.parseRequest $  "https://" <> region <> ".api.battle.net/wow/auction/data/" <> rname r <> "locale=en_GB&apikey=" <> apikey
+takeAuctionInfo :: C.Manager  -> Realm -> IO (Maybe [AucFile]) -- request realm auction info from bnet api
+takeAuctionInfo m r = do 
+    req <- C.parseRequest $  "https://eu.api.battle.net/wow/auction/data/" <> slug r <> "?locale=en_GB&apikey=" <> apikey
     runResourceT $ do 
-        response <- C.httpLbs (setRequestIgnoreStatus req) m 
+        response <- C.httpLbs  req m --(setRequestIgnoreStatus req) m 
         -- decode auc file info from C.responseBody response here
         -- create and push new request to queue
-        return ()
+        --return 
+        return $ parseAucFiles $ C.responseBody response
 
 
 --funQueue :: MVar (S.Seq (IO ()))
@@ -284,12 +288,24 @@ addFunToQ f q = do
     putMVar q $ q' S.|> f 
 
 
+
+--printAucFiles :: C.Manager -> Realm -> Maybe AucFile
+--printAucFiles m r = takeAuctionInfo m "eu" r
+   
+
+
 myfun :: IO ()
 myfun = do
-    funQueue <- newMVar S.empty :: IO (MVar (S.Seq (IO ())))
-    counter <- newMVar 100 :: IO (MVar Int)
+    --funQueue <- newMVar S.empty :: IO (MVar (S.Seq (IO ())))
+    --counter <- newMVar 100 :: IO (MVar Int)
     manager <- C.newManager C.tlsManagerSettings
     res <- takeRealms manager
     case res of 
         Nothing -> putStrLn "No realms"
-        Just x -> mapM_ print $  filterRealms x
+        Just x -> do 
+            print $ head x
+            af <- takeAuctionInfo manager (head x)
+            case af of 
+                Nothing -> putStrLn "No auc files"
+                Just a -> print $ lastModified a
+            

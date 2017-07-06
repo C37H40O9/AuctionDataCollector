@@ -25,6 +25,8 @@ library
                       ,http-client
                       ,resourcet
                       ,comonad
+                      ,time
+                      ,old-locale
                       
   default-language:    Haskell2010
 

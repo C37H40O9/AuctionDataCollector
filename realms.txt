@@ -1,0 +1,123 @@
+Realm {rname = "Aegwynn", slug = "aegwynn", connectedRealms = ["aegwynn"]}
+Realm {rname = "Aerie Peak", slug = "aerie-peak", connectedRealms = ["bronzebeard","aerie-peak"]}
+Realm {rname = "Agamaggan", slug = "agamaggan", connectedRealms = ["crushridge","bloodscalp","agamaggan","twilights-hammer","hakkar","emeriss"]}
+Realm {rname = "Aggra (Portugu\234s)", slug = "aggra-portugues", connectedRealms = ["grim-batol","aggra-portugues"]}
+Realm {rname = "Aggramar", slug = "aggramar", connectedRealms = ["aggramar","hellscream"]}
+Realm {rname = "Ahn'Qiraj", slug = "ahnqiraj", connectedRealms = ["daggerspine","sunstrider","ahnqiraj","talnivarr","trollbane","chromaggus","laughing-skull","balnazzar","shattered-halls","boulderfist"]}
+Realm {rname = "Al'Akir", slug = "alakir", connectedRealms = ["alakir","xavius","skullcrusher"]}
+Realm {rname = "Alexstrasza", slug = "alexstrasza", connectedRealms = ["alexstrasza","nethersturm"]}
+Realm {rname = "Alleria", slug = "alleria", connectedRealms = ["rexxar","alleria"]}
+Realm {rname = "Alonsus", slug = "alonsus", connectedRealms = ["kul-tiras","anachronos","alonsus"]}
+Realm {rname = "Aman'Thul", slug = "amanthul", connectedRealms = ["amanthul"]}
+Realm {rname = "Ambossar", slug = "ambossar", connectedRealms = ["kargath","ambossar"]}
+Realm {rname = "Anetheron", slug = "anetheron", connectedRealms = ["anetheron","nathrezim","kiljaeden","guldan","festung-der-sturme","rajaxx"]}
+Realm {rname = "Antonidas", slug = "antonidas", connectedRealms = ["antonidas"]}
+Realm {rname = "Anub'arak", slug = "anubarak", connectedRealms = ["nazjatar","frostmourne","zuluhed","anubarak","dalvengyr"]}
+Realm {rname = "Arak-arahm", slug = "arakarahm", connectedRealms = ["kaelthas","arakarahm","throkferoth","rashgarroth"]}
+Realm {rname = "Arathi", slug = "arathi", connectedRealms = ["illidan","naxxramas","temple-noir","arathi"]}
+Realm {rname = "Arathor", slug = "arathor", connectedRealms = ["arathor","hellfire"]}
+Realm {rname = "Archimonde", slug = "archimonde", connectedRealms = ["archimonde"]}
+Realm {rname = "Area 52", slug = "area-52", connectedRealms = ["area-52","ungoro","senjin"]}
+Realm {rname = "Argent Dawn", slug = "argent-dawn", connectedRealms = ["argent-dawn"]}
+Realm {rname = "Arthas", slug = "arthas", connectedRealms = ["arthas","kelthuzad","wrathbringer","blutkessel","veklor"]}
+Realm {rname = "Arygos", slug = "arygos", connectedRealms = ["khazgoroth","arygos"]}
+Realm {rname = "Ashenvale", slug = "ashenvale", connectedRealms = ["ashenvale"]}
+Realm {rname = "Aszune", slug = "aszune", connectedRealms = ["aszune","shadowsong"]}
+Realm {rname = "Auchindoun", slug = "auchindoun", connectedRealms = ["dunemaul","auchindoun","jaedenar"]}
+Realm {rname = "Azjol-Nerub", slug = "azjolnerub", connectedRealms = ["azjolnerub","quelthalas"]}
+Realm {rname = "Azshara", slug = "azshara", connectedRealms = ["azshara","kragjin"]}
+Realm {rname = "Azuregos", slug = "azuregos", connectedRealms = ["azuregos"]}
+Realm {rname = "Azuremyst", slug = "azuremyst", connectedRealms = ["azuremyst","stormrage"]}
+Realm {rname = "Baelgun", slug = "baelgun", connectedRealms = ["lothar","baelgun"]}
+Realm {rname = "Blackhand", slug = "blackhand", connectedRealms = ["blackhand"]}
+Realm {rname = "Blackmoore", slug = "blackmoore", connectedRealms = ["blackmoore"]}
+Realm {rname = "Blackrock", slug = "blackrock", connectedRealms = ["blackrock"]}
+Realm {rname = "Blackscar", slug = "blackscar", connectedRealms = ["blackscar"]}
+Realm {rname = "Blade's Edge", slug = "blades-edge", connectedRealms = ["blades-edge","eonar","veknilash"]}
+Realm {rname = "Bladefist", slug = "bladefist", connectedRealms = ["bladefist","zenedar","frostwhisper"]}
+Realm {rname = "Bloodfeather", slug = "bloodfeather", connectedRealms = ["executus","shattered-hand","korgall","burning-steppes","bloodfeather"]}
+Realm {rname = "Bloodhoof", slug = "bloodhoof", connectedRealms = ["bloodhoof","khadgar"]}
+Realm {rname = "Booty Bay", slug = "booty-bay", connectedRealms = ["booty-bay","deathweaver"]}
+Realm {rname = "Borean Tundra", slug = "borean-tundra", connectedRealms = ["borean-tundra"]}
+Realm {rname = "Bronze Dragonflight", slug = "bronze-dragonflight", connectedRealms = ["bronze-dragonflight","nordrassil"]}
+Realm {rname = "Burning Blade", slug = "burning-blade", connectedRealms = ["burning-blade","drakthul"]}
+Realm {rname = "Burning Legion", slug = "burning-legion", connectedRealms = ["burning-legion"]}
+Realm {rname = "C'Thun", slug = "cthun", connectedRealms = ["cthun"]}
+Realm {rname = "Chamber of Aspects", slug = "chamber-of-aspects", connectedRealms = ["chamber-of-aspects"]}
+Realm {rname = "Chants \233ternels", slug = "chants-eternels", connectedRealms = ["voljin","chants-eternels"]}
+Realm {rname = "Cho'gall", slug = "chogall", connectedRealms = ["chogall","sinstralis","eldrethalas"]}
+Realm {rname = "Colinas Pardas", slug = "colinas-pardas", connectedRealms = ["colinas-pardas","los-errantes","tyrande"]}
+Realm {rname = "Confr\233rie du Thorium", slug = "confrerie-du-thorium", connectedRealms = ["confrerie-du-thorium","les-sentinelles","les-clairvoyants"]}
+Realm {rname = "Conseil des Ombres", slug = "conseil-des-ombres", connectedRealms = ["la-croisade-ecarlate","conseil-des-ombres","culte-de-la-rive-noire"]}
+Realm {rname = "Dalaran", slug = "dalaran", connectedRealms = ["dalaran","marecage-de-zangar"]}
+Realm {rname = "Darkmoon Faire", slug = "darkmoon-faire", connectedRealms = ["earthen-ring","darkmoon-faire"]}
+Realm {rname = "Darksorrow", slug = "darksorrow", connectedRealms = ["darksorrow","neptulon","genjuros"]}
+Realm {rname = "Darkspear", slug = "darkspear", connectedRealms = ["terokkar","darkspear","saurfang"]}
+Realm {rname = "Das Konsortium", slug = "das-konsortium", connectedRealms = ["die-arguswacht","die-todeskrallen","das-syndikat","kult-der-verdammten","das-konsortium","der-abyssische-rat"]}
+Realm {rname = "Deathguard", slug = "deathguard", connectedRealms = ["deathguard"]}
+Realm {rname = "Deathwing", slug = "deathwing", connectedRealms = ["deathwing","lightnings-blade","the-maelstrom","karazhan"]}
+Realm {rname = "Deepholm", slug = "deepholm", connectedRealms = ["razuvious","deepholm"]}
+Realm {rname = "Defias Brotherhood", slug = "defias-brotherhood", connectedRealms = ["scarshield-legion","the-venture-co","defias-brotherhood","sporeggar","ravenholdt"]}
+Realm {rname = "Dentarg", slug = "dentarg", connectedRealms = ["dentarg","tarren-mill"]}
+Realm {rname = "Der Mithrilorden", slug = "der-mithrilorden", connectedRealms = ["der-mithrilorden","der-rat-von-dalaran"]}
+Realm {rname = "Destromath", slug = "destromath", connectedRealms = ["nefarian","mannoroth","gorgonnash","destromath","nerathor"]}
+Realm {rname = "Dethecus", slug = "dethecus", connectedRealms = ["dethecus","terrordar","onyxia","theradras","mugthol"]}
+Realm {rname = "Die Aldor", slug = "die-aldor", connectedRealms = ["die-aldor"]}
+Realm {rname = "Die Nachtwache", slug = "die-nachtwache", connectedRealms = ["forscherliga","die-nachtwache"]}
+Realm {rname = "Die Silberne Hand", slug = "die-silberne-hand", connectedRealms = ["die-ewige-wacht","die-silberne-hand"]}
+Realm {rname = "Doomhammer", slug = "doomhammer", connectedRealms = ["doomhammer","turalyon"]}
+Realm {rname = "Draenor", slug = "draenor", connectedRealms = ["draenor"]}
+Realm {rname = "Dragonblight", slug = "dragonblight", connectedRealms = ["dragonblight","ghostlands"]}
+Realm {rname = "Dragonmaw", slug = "dragonmaw", connectedRealms = ["dragonmaw","stormreaver","spinebreaker","haomarush","vashj"]}
+Realm {rname = "Drek'Thar", slug = "drekthar", connectedRealms = ["uldaman","drekthar"]}
+Realm {rname = "Dun Modr", slug = "dun-modr", connectedRealms = ["dun-modr"]}
+Realm {rname = "Dun Morogh", slug = "dun-morogh", connectedRealms = ["norgannon","dun-morogh"]}
+Realm {rname = "Durotan", slug = "durotan", connectedRealms = ["durotan","tirion"]}
+Realm {rname = "Echsenkessel", slug = "echsenkessel", connectedRealms = ["malganis","echsenkessel","taerar"]}
+Realm {rname = "Eitrigg", slug = "eitrigg", connectedRealms = ["eitrigg","krasus"]}
+Realm {rname = "Elune", slug = "elune", connectedRealms = ["elune","varimathras"]}
+Realm {rname = "Emerald Dream", slug = "emerald-dream", connectedRealms = ["emerald-dream","terenas"]}
+Realm {rname = "Eredar", slug = "eredar", connectedRealms = ["eredar"]}
+Realm {rname = "Eversong", slug = "eversong", connectedRealms = ["eversong"]}
+Realm {rname = "Exodar", slug = "exodar", connectedRealms = ["minahonda","exodar"]}
+Realm {rname = "Fordragon", slug = "fordragon", connectedRealms = ["fordragon"]}
+Realm {rname = "Frostmane", slug = "frostmane", connectedRealms = ["frostmane"]}
+Realm {rname = "Frostwolf", slug = "frostwolf", connectedRealms = ["frostwolf"]}
+Realm {rname = "Galakrond", slug = "galakrond", connectedRealms = ["galakrond"]}
+Realm {rname = "Garona", slug = "garona", connectedRealms = ["sargeras","nerzhul","garona"]}
+Realm {rname = "Garrosh", slug = "garrosh", connectedRealms = ["nozdormu","garrosh","shattrath"]}
+Realm {rname = "Gilneas", slug = "gilneas", connectedRealms = ["gilneas","ulduar"]}
+Realm {rname = "Goldrinn", slug = "goldrinn", connectedRealms = ["goldrinn"]}
+Realm {rname = "Gordunni", slug = "gordunni", connectedRealms = ["gordunni"]}
+Realm {rname = "Greymane", slug = "greymane", connectedRealms = ["lich-king","greymane"]}
+Realm {rname = "Grom", slug = "grom", connectedRealms = ["grom","thermaplugg"]}
+Realm {rname = "Howling Fjord", slug = "howling-fjord", connectedRealms = ["howling-fjord"]}
+Realm {rname = "Hyjal", slug = "hyjal", connectedRealms = ["hyjal"]}
+Realm {rname = "Kazzak", slug = "kazzak", connectedRealms = ["kazzak"]}
+Realm {rname = "Khaz Modan", slug = "khaz-modan", connectedRealms = ["khaz-modan"]}
+Realm {rname = "Kilrogg", slug = "kilrogg", connectedRealms = ["runetotem","nagrand","kilrogg"]}
+Realm {rname = "Kirin Tor", slug = "kirin-tor", connectedRealms = ["kirin-tor"]}
+Realm {rname = "Lightbringer", slug = "lightbringer", connectedRealms = ["mazrigos","lightbringer"]}
+Realm {rname = "Lordaeron", slug = "lordaeron", connectedRealms = ["tichondrius","lordaeron"]}
+Realm {rname = "Madmortem", slug = "madmortem", connectedRealms = ["proudmoore","madmortem"]}
+Realm {rname = "Magtheridon", slug = "magtheridon", connectedRealms = ["magtheridon"]}
+Realm {rname = "Malfurion", slug = "malfurion", connectedRealms = ["malygos","malfurion"]}
+Realm {rname = "Malorne", slug = "malorne", connectedRealms = ["ysera","malorne"]}
+Realm {rname = "Medivh", slug = "medivh", connectedRealms = ["medivh","suramar"]}
+Realm {rname = "Moonglade", slug = "moonglade", connectedRealms = ["steamwheedle-cartel","moonglade","the-shatar"]}
+Realm {rname = "Nemesis", slug = "nemesis", connectedRealms = ["nemesis"]}
+Realm {rname = "Outland", slug = "outland", connectedRealms = ["outland"]}
+Realm {rname = "Perenolde", slug = "perenolde", connectedRealms = ["perenolde","teldrassil"]}
+Realm {rname = "Pozzo dell'Eternit\224", slug = "pozzo-delleternita", connectedRealms = ["pozzo-delleternita"]}
+Realm {rname = "Ragnaros", slug = "ragnaros", connectedRealms = ["ragnaros"]}
+Realm {rname = "Ravencrest", slug = "ravencrest", connectedRealms = ["ravencrest"]}
+Realm {rname = "Sanguino", slug = "sanguino", connectedRealms = ["shendralar","sanguino","uldum","zuljin"]}
+Realm {rname = "Silvermoon", slug = "silvermoon", connectedRealms = ["silvermoon"]}
+Realm {rname = "Soulflayer", slug = "soulflayer", connectedRealms = ["soulflayer"]}
+Realm {rname = "Stormscale", slug = "stormscale", connectedRealms = ["stormscale"]}
+Realm {rname = "Sylvanas", slug = "sylvanas", connectedRealms = ["sylvanas"]}
+Realm {rname = "Thrall", slug = "thrall", connectedRealms = ["thrall"]}
+Realm {rname = "Thunderhorn", slug = "thunderhorn", connectedRealms = ["thunderhorn","wildhammer"]}
+Realm {rname = "Todeswache", slug = "todeswache", connectedRealms = ["zirkel-des-cenarius","todeswache"]}
+Realm {rname = "Twisting Nether", slug = "twisting-nether", connectedRealms = ["twisting-nether"]}
+Realm {rname = "Ysondre", slug = "ysondre", connectedRealms = ["ysondre"]}
