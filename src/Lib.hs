@@ -28,6 +28,10 @@ import Control.Applicative (liftA2)
 --import Control.Comonad (extract)
 import Control.Concurrent.MVar
 
+import Data.Time.Clock.POSIX
+import Data.Time.Format
+import System.Locale
+
 
 
 
@@ -154,7 +158,14 @@ data Realm = Realm
 
 newtype Realms = Realms {realms ::[Realm]} deriving (Eq, Show) 
 
+data AucFile = AucFile { url          :: String
+                       , lastModified :: POSIXTime}
 
+instance FromJSON AucFile where 
+    parseJson = withObject "aucfile" $ \o -> do 
+        url <- o .: "url"
+        lastModified <- o .: "lastModified"
+        return AucFile{..}
 
 instance FromJSON AuctionS where
     parseJSON = withObject "auctions" $ \o -> do
@@ -192,6 +203,12 @@ instance FromJSON Realm where
 apikey :: String
 apikey = "vrh7sn2zntq4vu7wntkxmd64jwq2ahny"
 
+
+aucFilesParser :: Value -> Parser [AucFile]
+aucFilesParser = withObject "aucFilesParser" $ \o -> o .: "files"
+
+parseAucFiles :: B.ByteString -> Maybe [AucFile]
+parseAucFiles x = parseMaybe aucFilseParser =<< decode x
 
 auctionsParser :: Value -> Parser [Auction]
 auctionsParser = withObject "auctionsParser" $ \o -> o .: "auctions"
