@@ -26,6 +26,7 @@ import Control.Applicative (liftA2)
 import Control.Monad (join)
 import Control.Concurrent.MVar
 import Data.Time.Clock.POSIX
+import Data.Time.Clock
 import Data.Time.Format
 import System.Locale
 
@@ -164,7 +165,7 @@ takeRealms m = do
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> apikey
     runResourceT $ do
            response <- C.httpLbs (setRequestIgnoreStatus req) m           
-           return $ parseRealms $ C.responseBody response
+           return $  fmap filterRealms  $ parseRealms $ C.responseBody response
 
 
 filterRealms :: [Realm] -> [Realm]
@@ -194,7 +195,8 @@ addFunToQ f q = do
     putMVar q $ q' S.|> f 
 
 
-
+millisToUTC :: Integer -> UTCTime
+millisToUTC t = posixSecondsToUTCTime $ (fromInteger t) / 1000
 
    
 
@@ -208,9 +210,10 @@ myfun = do
     case res of 
         Nothing -> putStrLn "No realms"
         Just x -> do 
-            print $ head x
-            af <- takeAuctionInfo manager (head x)
+            --print  x
+            af <- sequence  [takeAuctionInfo manager z | z <- x]
+            --print af
             case af of 
-                Nothing -> putStrLn "No auc files"
-                Just a -> print $ fmap lastModified a
+                [] -> putStrLn "No auc files"
+                ls@(af:afs) -> mapM_ (mapM_ print)  $  fmap (map (\x -> millisToUTC $ lastModified x))  $ join <$> sequence ls
             
