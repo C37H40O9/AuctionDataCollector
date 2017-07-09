@@ -9,6 +9,7 @@
 
 module Lib
      where
+import Types
 import GHC.Generics
 import qualified Data.Map.Strict as M
 import qualified Data.Sequence as S
@@ -88,22 +89,6 @@ statToBox s = parseToBox  $ l : ws
                         ws = S.index s' <$> ix
                    
                         
-                -- Whiskers Box
-data WBox = WBox { ic   :: Int  -- items count
-                 , minW :: Int
-                 , botW :: Int
-                 , p25  :: Int
-                 , p50  :: Int
-                 , p75  :: Int
-                 , topW :: Int
-                 , maxW :: Int } deriving Show
-                 
-
---printItem :: Item -> IO ()
---printItem = putStrLn . (\x -> "name: " <> name x <> " id: " <> show (Lib.id x))
-
---printAuc :: Auction -> IO ()
---printAuc = putStrLn . (\x -> "itemId: " <> show (itemId x) <> " bid: " <> show (bid x) <> " buyout: " <> show (buyout x) <> " quantity: " <> show (quantity x))
 
 itemsFile :: FilePath
 itemsFile = "items.json"
@@ -131,38 +116,6 @@ aucsDec = fmap eitherDecode' getAucsJSON
 
 aucToTuple :: Auction -> (Int,Int,Int, Int)
 aucToTuple a = (itemId a,bid a, buyout a, quantity a)
-
-data Item = Item { name :: String
-                 , iid :: Int
-                 } deriving (Eq, Show)
-
-data Auction = Auction { bid :: Int
-                       , buyout :: Int
-                       , quantity :: Int
-                       , itemId :: Int
-                       } deriving (Eq, Show)
-
-data IStats = IStats { bid' :: S.Seq Int
-                     , buyout' :: S.Seq Int                     
-                     } deriving (Eq, Show)
-
-newtype AuctionS = AuctionS {auctions :: [Auction]} deriving (Eq, Show)
-
-newtype ItemS = ItemS {items :: [Item]} deriving (Eq, Show)
-
-
-
-type Region = String
-
-data Realm = Realm
-             { rname :: String
-             , slug :: String
-             , connectedRealms :: [String]} deriving (Eq, Show)
-
-newtype Realms = Realms {realms ::[Realm]} deriving (Eq, Show) 
-
-data AucFile = AucFile { url          :: String
-                       , lastModified :: Integer} deriving (Eq, Show, Generic)
 
 instance FromJSON AucFile {-where 
     parseJSON = withObject "file" $ \o -> do 
