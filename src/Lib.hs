@@ -10,10 +10,8 @@
 module Lib
      where
 import Types
-import GHC.Generics
 import qualified Data.Map.Strict as M
 import qualified Data.Sequence as S
---import Data.Text (Text)
 import qualified Data.ByteString.Lazy as B
 import Data.Aeson
 import Data.Aeson.Types
@@ -26,12 +24,7 @@ import Control.Monad.Trans.Resource
 import Control.Monad.IO.Class
 import Control.Applicative (liftA2)
 import Control.Monad (join)
---import qualified Data.Text as T
---import qualified Data.Text.IO as T
---import Data.Either (rights)
---import Control.Comonad (extract)
 import Control.Concurrent.MVar
-
 import Data.Time.Clock.POSIX
 import Data.Time.Format
 import System.Locale
