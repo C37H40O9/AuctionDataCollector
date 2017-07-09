@@ -222,10 +222,8 @@ takeAuctionInfo :: C.Manager  -> Realm -> IO (Maybe [AucFile]) -- request realm 
 takeAuctionInfo m r = do 
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/auction/data/" <> slug r <> "?locale=en_GB&apikey=" <> apikey
     runResourceT $ do 
-        response <- C.httpLbs  req m --(setRequestIgnoreStatus req) m 
-        -- decode auc file info from C.responseBody response here
-        -- create and push new request to queue
-        --return 
+        response <- C.httpLbs  (setRequestIgnoreStatus req) m 
+        
         return $ parseAucFiles $ C.responseBody response
 
 
@@ -242,8 +240,7 @@ addFunToQ f q = do
 
 
 
---printAucFiles :: C.Manager -> Realm -> Maybe AucFile
---printAucFiles m r = takeAuctionInfo m "eu" r
+
    
 
 
@@ -260,5 +257,5 @@ myfun = do
             af <- takeAuctionInfo manager (head x)
             case af of 
                 Nothing -> putStrLn "No auc files"
-                Just a -> print $ lastModified a
+                Just a -> print $ fmap lastModified a
             
