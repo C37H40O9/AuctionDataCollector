@@ -117,44 +117,6 @@ aucsDec = fmap eitherDecode' getAucsJSON
 aucToTuple :: Auction -> (Int,Int,Int, Int)
 aucToTuple a = (itemId a,bid a, buyout a, quantity a)
 
-instance FromJSON AucFile {-where 
-    parseJSON = withObject "file" $ \o -> do 
-        url <- o .: "url"
-        lastModified <- o .: "lastModified"
-        return AucFile{..}
--}
-instance FromJSON AuctionS where
-    parseJSON = withObject "auctions" $ \o -> do
-        auctions <- o .: "auctions"
-        return AuctionS{..}
-
-instance FromJSON ItemS where
-    parseJSON = withObject "items" $ \o -> do
-        items <- o .: "items"
-        return ItemS{..}
-
-instance FromJSON Auction where
-    parseJSON = withObject "aucs" $ \o -> do
-        bid <- o .: "bid"
-        buyout <- o .: "buyout"
-        quantity <- o .: "quantity"
-        itemId <- o .: "item"
-        return Auction{..}
-
-instance FromJSON Item where
-    parseJSON = withObject "items" $ \o -> do
-        name <- o .: "name"
-        iid <- o .: "id"
-        return Item{..}
-
-
-instance FromJSON Realm where
-    parseJSON = withObject "realm" $ \o -> do          
-           rname <- o .: "name"
-           slug <- o .: "slug"
-           connectedRealms <- o .: "connected_realms"
-           return Realm{..}
-
 
 apikey :: String
 apikey = "vrh7sn2zntq4vu7wntkxmd64jwq2ahny"
