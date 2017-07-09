@@ -7,7 +7,8 @@
 
 module Types
         where
-
+import qualified Data.Sequence as S
+import GHC.Generics
 
                 -- Type for whiskers box diagram
 data WBox = WBox { ic   :: Int  -- items count
