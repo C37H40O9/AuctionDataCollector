@@ -119,8 +119,8 @@ apikey = "vrh7sn2zntq4vu7wntkxmd64jwq2ahny"
 aucFilesParser :: Value -> Parser [AucFile]
 aucFilesParser = withObject "aucFilesParser" $ \o -> o .:? "files" .!= [AucFile {url = "default", lastModified = 12345}]
 
-parseAucFiles :: B.ByteString -> Maybe [AucFile]
-parseAucFiles x = parseMaybe aucFilesParser =<< decode x
+parseAucFiles :: B.ByteString -> Maybe AucFile
+parseAucFiles x = fmap head $ parseMaybe aucFilesParser =<< decode x
 
 auctionsParser :: Value -> Parser [Auction]
 auctionsParser = withObject "auctionsParser" $ \o -> o .: "auctions"
@@ -159,7 +159,13 @@ statsConcat  s1 s2 = IStats bi bu
 collect ::  [Auction] -> M.Map Int IStats
 collect  = foldl'  (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b ) M.empty 
 
+{- TODO 
+doReq :: ReqParams C.Manager Realm -> IO ()
+doReq r = case r of 
+    ReqRealms m -> takeRealms m
+    ReqAuc m r -> takeAuctionInfo m r
 
+-}
 takeRealms :: C.Manager -> IO (Maybe [Realm])
 takeRealms m = do
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> apikey
@@ -174,7 +180,7 @@ filterRealms (x:xs) = x : t
     where t = filterRealms $ filter (\y -> slug x `notElem` connectedRealms y ) xs
 
 
-takeAuctionInfo :: C.Manager  -> Realm -> IO (Maybe [AucFile]) -- request realm auction info from bnet api
+takeAuctionInfo :: C.Manager  -> Realm -> IO (Maybe AucFile) -- request realm auction info from bnet api
 takeAuctionInfo m r = do 
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/auction/data/" <> slug r <> "?locale=en_GB&apikey=" <> apikey
     runResourceT $ do 
@@ -215,5 +221,5 @@ myfun = do
             --print af
             case af of 
                 [] -> putStrLn "No auc files"
-                ls@(af:afs) -> mapM_ (mapM_ print)  $  fmap (map (\x -> millisToUTC $ lastModified x))  $ join <$> sequence ls
+                ls@(af:afs) -> mapM_ (mapM_ print)  $ map (millisToUTC . lastModified )  <$>  sequence ls
             
