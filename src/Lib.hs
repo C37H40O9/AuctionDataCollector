@@ -29,6 +29,7 @@ import Data.Time.Clock.POSIX
 import Data.Time.Clock
 import Data.Time.Format
 import System.Locale
+import Control.Monad.Trans.Class (lift)
 
 
 
@@ -189,6 +190,15 @@ takeAuctionInfo m r = do
         return $ parseAucFiles $ C.responseBody response
 
 
+harvestAuctionJson :: C.Manager -> AucFile -> IO (Maybe (M.Map Int IStats))
+harvestAuctionJson m a = do 
+    req <- C.parseRequest $ url a
+    runResourceT $ do 
+        response <- C.httpLbs (setRequestIgnoreStatus req) m         
+        return $  fmap collect $ parseAuctions $ C.responseBody response
+        
+
+
 --funQueue :: MVar (S.Seq (IO ()))
 --funQueue = newMVar S.empty
 
@@ -202,7 +212,7 @@ addFunToQ f q = do
 
 
 millisToUTC :: Integer -> UTCTime
-millisToUTC t = posixSecondsToUTCTime $ (fromInteger t) / 1000
+millisToUTC t = posixSecondsToUTCTime $ fromInteger t / 1000
 
    
 

@@ -28,6 +28,7 @@ library
                       ,comonad
                       ,time
                       ,old-locale
+                      ,transformers
                       
   default-language:    Haskell2010
 
