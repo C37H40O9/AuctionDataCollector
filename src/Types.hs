@@ -52,8 +52,8 @@ newtype Realms = Realms {realms ::[Realm]} deriving (Eq, Show)
 data AucFile = AucFile { url          :: String
                        , lastModified :: Integer} deriving (Eq, Show, Generic)
 
-
-data ReqParams m r = ReqAuc m r | ReqRealms m 
+-- manager realm aucfile 
+data ReqParams m r a = ReqAuc m r | ReqRealms m | ReqAucJson m a
 
 instance FromJSON AucFile {-where 
     parseJSON = withObject "file" $ \o -> do 
