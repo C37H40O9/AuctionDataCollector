@@ -10,7 +10,7 @@ module Types
 import qualified Data.Sequence as S
 import GHC.Generics
 import Data.Aeson
-import Data.Aeson.Types
+
 
                 -- Type for whiskers box diagram
 data WBox = WBox { ic   :: Int  -- items count
