@@ -10,7 +10,8 @@ module Types
 import qualified Data.Sequence as S
 import GHC.Generics
 import Data.Aeson
-
+import qualified Network.HTTP.Conduit as C
+import Control.Concurrent.MVar
 
                 -- Type for whiskers box diagram
 data WBox = WBox { ic   :: Int  -- items count
@@ -52,8 +53,10 @@ newtype Realms = Realms {realms ::[Realm]} deriving (Eq, Show)
 data AucFile = AucFile { url          :: String
                        , lastModified :: Integer} deriving (Eq, Show, Generic)
 
--- manager realm aucfile 
-data ReqParams m r a = ReqAuc m r | ReqRealms m | ReqAucJson m a
+-- counter requestQueue manager realm aucfile 
+data ReqParams c rq m r a = ReqAuc     (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ))) C.Manager Realm 
+                          | ReqRealms  (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ))) C.Manager 
+                          | ReqAucJson (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ))) C.Manager AucFile
 
 instance FromJSON AucFile {-where 
     parseJSON = withObject "file" $ \o -> do 
