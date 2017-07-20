@@ -23,13 +23,14 @@ import qualified Network.HTTP.Conduit as C
 import Control.Monad.Trans.Resource
 import Control.Monad.IO.Class
 import Control.Applicative (liftA2)
-import Control.Monad (join)
+import Control.Monad (join, forever)
 import Control.Concurrent.MVar
 import Data.Time.Clock.POSIX
 import Data.Time.Clock
 import Data.Time.Format
 import System.Locale
 import Control.Monad.Trans.Class (lift)
+import Control.Concurrent
 
 
 
@@ -167,13 +168,14 @@ doReq r = case r of
     ReqAuc m r -> takeAuctionInfo m r
 
 -}
-takeRealms :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a)) -> C.Manager -> IO (Maybe [Realm])
+takeRealms :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a)) -> C.Manager -> IO ()
 takeRealms c rq m = do
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> apikey
     runResourceT $ do
            response <- C.httpLbs (setRequestIgnoreStatus req) m  
-           incrCounter c         
-    return $  fmap (mapM_ addReqToQ).map (ReqAuc c rq) .filterRealms  $ parseRealms $ C.responseBody response
+           return $ incrCounter c         
+           return $ fmap ((mapM_ (addReqToQ rq)).map (ReqAuc c rq m ).filterRealms)  $ parseRealms $ C.responseBody response
+           return ()
 
 
 filterRealms :: [Realm] -> [Realm]
@@ -183,20 +185,24 @@ filterRealms (x:xs) = x : t
 
 
 takeAuctionInfo :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a)) -> C.Manager  -> Realm -> IO () -- request realm auction info from bnet api
-takeAuctionInfo m r = do 
+takeAuctionInfo c rq m r = do 
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/auction/data/" <> slug r <> "?locale=en_GB&apikey=" <> apikey
     runResourceT $ do 
-        response <- C.httpLbs  (setRequestIgnoreStatus req) m 
-        af <- lift parseAucFiles $ C.responseBody response
-        addReqToQ (ReqAucJson m af)
+        response <- C.httpLbs  (setRequestIgnoreStatus req) m
+        return $ incrCounter c 
+        let af = parseAucFiles $ C.responseBody response
+        return $ fmap ((addReqToQ rq).(ReqAucJson c rq m)) af
+        return ()
 
 
-harvestAuctionJson :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a)) -> C.Manager -> AucFile -> IO (Maybe (M.Map Int IStats))
-harvestAuctionJson c m a = do 
+harvestAuctionJson :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a)) -> C.Manager -> AucFile ->  IO ()--IO (Maybe (M.Map Int IStats))
+harvestAuctionJson c rq m a = do 
     req <- C.parseRequest $ url a
     runResourceT $ do 
-        response <- C.httpLbs (setRequestIgnoreStatus req) m         
-        return $  fmap collect $ parseAuctions $ C.responseBody response
+        response <- C.httpLbs (setRequestIgnoreStatus req) m 
+        return $ incrCounter c
+        return $ mapM_ print $  fmap collect $ parseAuctions $ C.responseBody response
+        return ()
         
 
 
@@ -206,8 +212,8 @@ harvestAuctionJson c m a = do
 --counter :: MVar Int
 --initCounter = newMVar 100
 
-addReqToQ :: ReqParams c rq m r a -> MVar (S.Seq (ReqParams c rq m r a)) -> IO ()
-addReqToQ reqParam rq = do 
+addReqToQ :: MVar (S.Seq (ReqParams c rq m r a)) -> ReqParams c rq m r a -> IO ()
+addReqToQ rq reqParam = do 
     rq' <- takeMVar rq 
     putMVar rq $ rq' S.|> reqParam 
 
@@ -226,19 +232,41 @@ runRequest rp = case rp of
     ReqAucJson c rq m a ->  harvestAuctionJson c rq m a
 
 
+runJob :: MVar Int -> MVar (S.Seq (ReqParams (MVar Int) (ReqParams c rq m r a) C.Manager Realm AucFile )) -> IO ()
+runJob c rq = do 
+    c' <- takeMVar c 
+    rq' <- takeMVar rq
+    let rqlen = S.length rq'
+    if rqlen >= c' 
+        then do 
+            putMVar c 0
+            let (r,t) = S.splitAt c' rq'
+            mapM_ runRequest r 
+            putMVar rq t 
+        else do 
+            putMVar c (c' - rqlen)            
+            mapM_ runRequest rq' 
+            putMVar rq S.empty
+
+
+
 myfun :: IO ()
 myfun = do
-    reqQueue <- newMVar S.empty :: IO (MVar (S.Seq (ReqParams (MVar Int) C.Manager Realm AucFile )))
-    counter <- newMVar 100 :: IO (MVar Int)
+    reqQueue <- newMVar S.empty :: IO (MVar (S.Seq (ReqParams (MVar Int) (ReqParams c rq m r a) C.Manager Realm AucFile )))
+    counter <- newMVar 99 :: IO (MVar Int)
     manager <- C.newManager C.tlsManagerSettings
-    res <- takeRealms manager
-    case res of 
-        Nothing -> putStrLn "No realms"
-        Just x -> do 
-            --print  x
-            af <- sequence  [takeAuctionInfo manager z | z <- x]
-            --print af
-            case af of 
-                [] -> putStrLn "No auc files"
-                ls@(af:afs) -> mapM_ (mapM_ print)  $ map (millisToUTC . lastModified )  <$>  sequence ls
-            
+    addReqToQ reqQueue (ReqRealms counter reqQueue manager)
+    putStrLn "strt forever"
+    forever $ do 
+                c <- readMVar counter
+                print c 
+                q <- readMVar reqQueue
+                print $ S.length q 
+                putStrLn "start forever"
+                runJob counter reqQueue
+                putStrLn "runJob"                
+                putStrLn "startdelay"
+                threadDelay 1000000
+                putStrLn "endDelay"
+                return ()
+
