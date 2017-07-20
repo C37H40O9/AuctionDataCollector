@@ -170,11 +170,17 @@ doReq r = case r of
 -}
 takeRealms :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a)) -> C.Manager -> IO ()
 takeRealms c rq m = do
+    putStrLn "start take realms"
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> apikey
+    putStrLn "parse realms request"
     runResourceT $ do
+           lift $ putStrLn "start realms resourcet"
            response <- C.httpLbs (setRequestIgnoreStatus req) m  
-           return $ incrCounter c         
-           return $ fmap ((mapM_ (addReqToQ rq)).map (ReqAuc c rq m ).filterRealms)  $ parseRealms $ C.responseBody response
+           lift $ putStrLn "end responce and start incr"
+           lift $ incrCounter c         
+           lift $ putStrLn "end incr and start parsing filtering and so on"
+           rr <- lift $ parseRealms $ C.responseBody response
+           lift $  fmap ((mapM_ (addReqToQ rq)).map (ReqAuc c rq m ).filterRealms)  $ parseRealms $ C.responseBody response
            return ()
 
 
