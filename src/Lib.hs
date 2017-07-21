@@ -95,24 +95,6 @@ getItemsJSON = B.readFile itemsFile
 itemsDec ::  IO (Either String ItemS)
 itemsDec = fmap eitherDecode' getItemsJSON
 
-realmsFile :: FilePath
-realmsFile = "realms.json"
-
-getRealmsJSON :: IO B.ByteString
-getRealmsJSON = B.readFile realmsFile
-
-aucsFile :: FilePath
-aucsFile = "auctions.json"
-
-getAucsJSON :: IO B.ByteString
-getAucsJSON = B.readFile aucsFile
-
-aucsDec :: IO (Either String AuctionS)
-aucsDec = fmap eitherDecode' getAucsJSON
-
-aucToTuple :: Auction -> (Int,Int,Int, Int)
-aucToTuple a = (itemId a,bid a, buyout a, quantity a)
-
 
 apikey :: String
 apikey = "vrh7sn2zntq4vu7wntkxmd64jwq2ahny"
