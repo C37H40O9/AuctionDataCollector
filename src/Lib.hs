@@ -21,6 +21,7 @@ import Data.List (foldl')
 import Network.HTTP.Client ( setRequestIgnoreStatus)
 import qualified Network.HTTP.Conduit as C
 import Control.Monad.Trans.Resource
+import Control.Monad.Trans.Maybe
 import Control.Monad.IO.Class
 import Control.Applicative (liftA2)
 import Control.Monad (join, forever)
@@ -49,7 +50,7 @@ inames = do
         Left err -> return []
         Right i -> return $ map (liftA2 (,) iid  name ) (items i)
 
-
+{-
 someFunc2 :: IO ()
 someFunc2 = do
     res <- aucsDec
@@ -61,7 +62,7 @@ someFunc2 = do
             let aucList =  filter (\x -> itemId x `elem` ids) (auctions a)
             let m = collect aucList
             mapM_ print $ M.assocs $ M.map (statToBox . buyout') m
-            {-
+            
             let aucList = map aucToTuple $ filter (\x -> itemId x `elem` ids) (auctions a)
             let avg = [(the iid, sum bid, sum buyout, sum quantity)
                       | (iid, bid, buyout, quantity) <- aucList
@@ -155,15 +156,20 @@ takeRealms c rq m = do
     putStrLn "start take realms"
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> apikey
     putStrLn "parse realms request"
-    runResourceT $ do
-           lift $ putStrLn "start realms resourcet"
-           response <- C.httpLbs (setRequestIgnoreStatus req) m  
-           lift $ putStrLn "end responce and start incr"
-           lift $ incrCounter c         
-           lift $ putStrLn "end incr and start parsing filtering and so on"
-           rr <- lift $ parseRealms $ C.responseBody response
-           lift $  fmap ((mapM_ (addReqToQ rq)).map (ReqAuc c rq m ).filterRealms)  $ parseRealms $ C.responseBody response
-           return ()
+    bs<-runResourceT $ do
+               lift $ putStrLn "start realms resourcet"
+               response <- C.httpLbs (setRequestIgnoreStatus req) m  
+               lift $ putStrLn "end responce and start incr"
+               lift $ incrCounter c         
+               lift $ putStrLn "end incr and start parsing filtering and so on"
+               return $  C.responseBody response     
+    let rr =  parseRealms bs
+    putStrLn "end PArsing realms"
+    case rr of 
+        Nothing -> return ()
+        Just x -> addReqsToQ rq $ S.fromList $ map (ReqAuc c rq m ) $ filterRealms x
+    putStrLn "end adding realms to queue"
+    return ()
 
 
 filterRealms :: [Realm] -> [Realm]
@@ -175,12 +181,15 @@ filterRealms (x:xs) = x : t
 takeAuctionInfo :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a)) -> C.Manager  -> Realm -> IO () -- request realm auction info from bnet api
 takeAuctionInfo c rq m r = do 
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/auction/data/" <> slug r <> "?locale=en_GB&apikey=" <> apikey
-    runResourceT $ do 
-        response <- C.httpLbs  (setRequestIgnoreStatus req) m
-        return $ incrCounter c 
-        let af = parseAucFiles $ C.responseBody response
-        return $ fmap ((addReqToQ rq).(ReqAucJson c rq m)) af
-        return ()
+    af<-runResourceT $ do 
+            response <- C.httpLbs  (setRequestIgnoreStatus req) m
+            lift $ incrCounter c 
+            return $ C.responseBody response
+    let ff = parseAucFiles af
+    case ff of
+        Nothing -> return ()
+        Just x ->  addReqToQ rq $ ReqAucJson c rq m x
+    return ()
 
 
 harvestAuctionJson :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a)) -> C.Manager -> AucFile ->  IO ()--IO (Maybe (M.Map Int IStats))
@@ -189,7 +198,7 @@ harvestAuctionJson c rq m a = do
     runResourceT $ do 
         response <- C.httpLbs (setRequestIgnoreStatus req) m 
         return $ incrCounter c
-        return $ mapM_ print $  fmap collect $ parseAuctions $ C.responseBody response
+        lift $ mapM_ print $  fmap collect $ parseAuctions $ C.responseBody response
         return ()
         
 
@@ -204,6 +213,12 @@ addReqToQ :: MVar (S.Seq (ReqParams c rq m r a)) -> ReqParams c rq m r a -> IO (
 addReqToQ rq reqParam = do 
     rq' <- takeMVar rq 
     putMVar rq $ rq' S.|> reqParam 
+
+addReqsToQ :: MVar (S.Seq (ReqParams c rq m r a)) -> S.Seq(ReqParams c rq m r a) -> IO ()
+addReqsToQ rq reqParams = do
+    rq' <- takeMVar rq
+    putMVar rq $ rq' S.>< reqParams
+
 
 incrCounter :: MVar Int -> IO ()
 incrCounter counter = do 
@@ -251,8 +266,9 @@ myfun = do
                 q <- readMVar reqQueue
                 print $ S.length q 
                 putStrLn "start forever"
-                runJob counter reqQueue
-                putStrLn "runJob"                
+                putStrLn "runJob"
+                forkIO $ runJob counter reqQueue
+                putStrLn "end runJob"                
                 putStrLn "startdelay"
                 threadDelay 1000000
                 putStrLn "endDelay"
