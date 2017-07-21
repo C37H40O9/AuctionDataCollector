@@ -32,6 +32,7 @@ import Data.Time.Format
 import System.Locale
 import Control.Monad.Trans.Class (lift)
 import Control.Concurrent
+import Foreign.StablePtr
 
 
 
@@ -182,9 +183,12 @@ takeAuctionInfo :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a)) -> C.Manager 
 takeAuctionInfo c rq m r = do 
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/auction/data/" <> slug r <> "?locale=en_GB&apikey=" <> apikey
     af<-runResourceT $ do 
+            lift $ putStrLn "start auction req"
             response <- C.httpLbs  (setRequestIgnoreStatus req) m
+            lift $ putStrLn "end auction req"
             lift $ incrCounter c 
             return $ C.responseBody response
+    putStrLn "start parse af"
     let ff = parseAucFiles af
     case ff of
         Nothing -> return ()
@@ -244,12 +248,12 @@ runJob c rq = do
         then do 
             putMVar c 0
             let (r,t) = S.splitAt c' rq'
+            putMVar rq t
             mapM_ runRequest r 
-            putMVar rq t 
         else do 
             putMVar c (c' - rqlen)            
-            mapM_ runRequest rq' 
             putMVar rq S.empty
+            mapM_ runRequest rq'
 
 
 
@@ -257,6 +261,8 @@ myfun :: IO ()
 myfun = do
     reqQueue <- newMVar S.empty :: IO (MVar (S.Seq (ReqParams (MVar Int) (ReqParams c rq m r a) C.Manager Realm AucFile )))
     counter <- newMVar 99 :: IO (MVar Int)
+    newStablePtr reqQueue
+    newStablePtr counter
     manager <- C.newManager C.tlsManagerSettings
     addReqToQ reqQueue (ReqRealms counter reqQueue manager)
     putStrLn "strt forever"
@@ -267,7 +273,7 @@ myfun = do
                 print $ S.length q 
                 putStrLn "start forever"
                 putStrLn "runJob"
-                forkIO $ runJob counter reqQueue
+                runJob counter reqQueue
                 putStrLn "end runJob"                
                 putStrLn "startdelay"
                 threadDelay 1000000
