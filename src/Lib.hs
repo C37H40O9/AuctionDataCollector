@@ -273,7 +273,7 @@ myfun = do
                 print $ S.length q 
                 putStrLn "start forever"
                 putStrLn "runJob"
-                runJob counter reqQueue
+                forkIO $ runJob counter reqQueue
                 putStrLn "end runJob"                
                 putStrLn "startdelay"
                 threadDelay 1000000
