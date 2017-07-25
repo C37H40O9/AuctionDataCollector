@@ -104,7 +104,7 @@ apikey = "vrh7sn2zntq4vu7wntkxmd64jwq2ahny"
 
 
 aucFilesParser :: Value -> Parser [AucFile]
-aucFilesParser = withObject "aucFilesParser" $ \o -> o .:? "files" .!= [AucFile {url = "default", lastModified = 12345}]
+aucFilesParser = withObject "aucFilesParser" $ \o -> o .: "files"
 
 parseAucFile :: B.ByteString -> Maybe AucFile
 parseAucFile x = fmap head $ parseMaybe aucFilesParser =<< decode x
@@ -190,7 +190,8 @@ takeAuctionInfo c rq m r = do
 harvestAuctionJson :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a)) -> C.Manager -> AucFile -> Realm ->  IO ()--IO (Maybe (M.Map Int IStats))
 harvestAuctionJson c rq m a r = do 
     req <- C.parseRequest $ url a
-    putStrLn $ millisToUTC $ lastModified a
+    putStrLn $ slug r <> " @ " <> show (millisToUTC $ lastModified a)
+    incrCounter c {-
     aj<-runResourceT $ do 
             response <- C.httpLbs (setRequestIgnoreStatus req) m
             return $ C.responseBody response
@@ -198,7 +199,7 @@ harvestAuctionJson c rq m a r = do
     let as = parseAuctions aj
     case as of
         Nothing -> return ()
-        Just x -> print $  collect x
+        Just x -> print $  collect x -}
     
 
 addReqToQ :: MVar (S.Seq (ReqParams c rq m r a)) -> ReqParams c rq m r a -> IO ()
@@ -254,10 +255,10 @@ myfun = do
     manager <- C.newManager C.tlsManagerSettings
     addReqToQ reqQueue (ReqRealms counter reqQueue manager)    
     forever $ do 
-                c <- readMVar counter
-                print c 
-                q <- readMVar reqQueue
-                print $ S.length q                
+                --c <- readMVar counter
+                --print c 
+                --q <- readMVar reqQueue
+                --print $ S.length q                
                 forkIO $ runJob counter reqQueue                
                 threadDelay second                
                 return ()
