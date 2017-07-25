@@ -106,8 +106,8 @@ apikey = "vrh7sn2zntq4vu7wntkxmd64jwq2ahny"
 aucFilesParser :: Value -> Parser [AucFile]
 aucFilesParser = withObject "aucFilesParser" $ \o -> o .:? "files" .!= [AucFile {url = "default", lastModified = 12345}]
 
-parseAucFiles :: B.ByteString -> Maybe AucFile
-parseAucFiles x = fmap head $ parseMaybe aucFilesParser =<< decode x
+parseAucFile :: B.ByteString -> Maybe AucFile
+parseAucFile x = fmap head $ parseMaybe aucFilesParser =<< decode x
 
 auctionsParser :: Value -> Parser [Auction]
 auctionsParser = withObject "auctionsParser" $ \o -> o .: "auctions"
@@ -132,19 +132,19 @@ parseRealms x = parseMaybe realmsParser =<< decode x
 
 aucToIStats :: Auction -> IStats
 aucToIStats a = IStats { bid'    = S.replicate (quantity a) (quot  (bid a)    (quantity a))
-                   , buyout' = S.replicate (quantity a) (quot  (buyout a) (quantity a))                
-                   }
+                       , buyout' = S.replicate (quantity a) (quot  (buyout a) (quantity a))                
+                       }
 
 statsConcat :: IStats -> IStats -> IStats
 statsConcat  s1 s2 = IStats bi bu 
-    where bi = bid' s1 S.><  bid' s2 
+    where bi = bid'    s1 S.>< bid' s2 
           bu = buyout' s1 S.>< buyout' s2
           
 
 --foldl' :: Foldable t => (b -> a -> b) -> b -> t a -> b
 
 collect ::  [Auction] -> M.Map Int IStats
-collect  = foldl'  (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b ) M.empty 
+collect  = foldl' (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b ) M.empty 
 
 {- TODO 
 doReq :: ReqParams C.Manager Realm -> IO ()
@@ -176,20 +176,21 @@ filterRealms (x:xs) = x : t
 takeAuctionInfo :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a)) -> C.Manager  -> Realm -> IO () -- request realm auction info from bnet api
 takeAuctionInfo c rq m r = do 
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/auction/data/" <> slug r <> "?locale=en_GB&apikey=" <> apikey
-    af<-runResourceT $ do            
+    aj<-runResourceT $ do            
             response <- C.httpLbs  (setRequestIgnoreStatus req) m
             return $ C.responseBody response  
     incrCounter c  
-    let ff = parseAucFiles af
-    case ff of
+    let af = parseAucFile aj
+    case af of
         Nothing -> return ()
         Just x ->  addReqToQ rq $ ReqAucJson c rq m x
     
 
 
-harvestAuctionJson :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a)) -> C.Manager -> AucFile ->  IO ()--IO (Maybe (M.Map Int IStats))
-harvestAuctionJson c rq m a = do 
+harvestAuctionJson :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a)) -> C.Manager -> AucFile -> Realm ->  IO ()--IO (Maybe (M.Map Int IStats))
+harvestAuctionJson c rq m a r = do 
     req <- C.parseRequest $ url a
+    putStrLn $ millisToUTC $ lastModified a
     aj<-runResourceT $ do 
             response <- C.httpLbs (setRequestIgnoreStatus req) m
             return $ C.responseBody response
@@ -199,14 +200,6 @@ harvestAuctionJson c rq m a = do
         Nothing -> return ()
         Just x -> print $  collect x
     
-        
-
-
---reqQueue :: MVar (S.Seq (IO ()))
---reqQueue = newMVar S.empty
-
---counter :: MVar Int
---initCounter = newMVar 100
 
 addReqToQ :: MVar (S.Seq (ReqParams c rq m r a)) -> ReqParams c rq m r a -> IO ()
 addReqToQ rq reqParam = do 
@@ -229,9 +222,9 @@ millisToUTC t = posixSecondsToUTCTime $ fromInteger t / 1000
 
 runRequest :: ReqParams c rq m r a -> IO()
 runRequest rp = case rp of 
-    ReqAuc c rq m r     -> takeAuctionInfo c rq m r
-    ReqRealms c rq m    -> takeRealms c rq m
-    ReqAucJson c rq m a ->  harvestAuctionJson c rq m a
+    ReqAuc c rq m r       -> takeAuctionInfo c rq m r
+    ReqRealms c rq m      -> takeRealms c rq m
+    ReqAucJson c rq m a r -> harvestAuctionJson c rq m a r
 
 
 runJob :: MVar Int -> MVar (S.Seq (ReqParams (MVar Int) (ReqParams c rq m r a) C.Manager Realm AucFile )) -> IO ()

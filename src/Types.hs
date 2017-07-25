@@ -51,7 +51,7 @@ data Realm = Realm
              , slug :: String
              , connectedRealms :: [String]} deriving (Eq, Show)
 
-newtype Realms = Realms {realms ::[Realm]} deriving (Eq, Show) 
+
 
 data AucFile = AucFile { url          :: String
                        , lastModified :: Integer} deriving (Eq, Show, Generic)
@@ -59,7 +59,7 @@ data AucFile = AucFile { url          :: String
 -- counter requestQueue manager realm aucfile 
 data ReqParams c rq m r a = ReqAuc     (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ))) C.Manager Realm 
                           | ReqRealms  (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ))) C.Manager 
-                          | ReqAucJson (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ))) C.Manager AucFile 
+                          | ReqAucJson (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ))) C.Manager AucFile Realm
 
 instance FromJSON AucFile {-where 
     parseJSON = withObject "file" $ \o -> do 
