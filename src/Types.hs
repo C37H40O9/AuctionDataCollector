@@ -33,9 +33,12 @@ data Auction = Auction { bid :: Int
                        , itemId :: Int
                        } deriving (Eq, Show)
 
-data IStats = IStats { bid' :: S.Seq Int
-                     , buyout' :: S.Seq Int                     
+data IStats = IStats { bid' :: Bid
+                     , buyout' :: Byout
                      } deriving (Eq, Show)
+
+type Bid   = S.Seq Int
+type Byout = S.Seq Int
 
 newtype AuctionS = AuctionS {auctions :: [Auction]} deriving (Eq, Show)
 
