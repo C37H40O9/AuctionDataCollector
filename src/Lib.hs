@@ -33,6 +33,7 @@ import System.Locale
 import Control.Monad.Trans.Class (lift)
 import Control.Concurrent
 import Foreign.StablePtr
+import qualified Control.Monad.Parallel as P 
 
 
 
@@ -170,7 +171,6 @@ takeRealms c rq m = do
         Nothing -> return ()
         Just x -> addReqsToQ rq $ S.fromList $ map (ReqAuc c rq m ) $ filterRealms x
     putStrLn "end adding realms to queue"
-    return ()
 
 
 filterRealms :: [Realm] -> [Realm]
@@ -193,17 +193,21 @@ takeAuctionInfo c rq m r = do
     case ff of
         Nothing -> return ()
         Just x ->  addReqToQ rq $ ReqAucJson c rq m x
-    return ()
+    
 
 
 harvestAuctionJson :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a)) -> C.Manager -> AucFile ->  IO ()--IO (Maybe (M.Map Int IStats))
 harvestAuctionJson c rq m a = do 
     req <- C.parseRequest $ url a
-    runResourceT $ do 
-        response <- C.httpLbs (setRequestIgnoreStatus req) m 
-        return $ incrCounter c
-        lift $ mapM_ print $  fmap collect $ parseAuctions $ C.responseBody response
-        return ()
+    aj<-runResourceT $ do 
+            response <- C.httpLbs (setRequestIgnoreStatus req) m 
+            lift $ incrCounter c
+            return $ C.responseBody response
+    let as = parseAuctions aj
+    case as of
+        Nothing -> return ()
+        Just x -> print $  collect x
+    
         
 
 
@@ -249,13 +253,13 @@ runJob c rq = do
             putMVar c 0
             let (r,t) = S.splitAt c' rq'
             putMVar rq t
-            mapM_ runRequest r 
+            mapM_ (\x -> forkIO $ runRequest x) r 
         else do 
             putMVar c (c' - rqlen)            
             putMVar rq S.empty
-            mapM_ runRequest rq'
+            mapM_ (\x -> forkIO $ runRequest x) rq'
 
-
+second = 1000000 :: Int
 
 myfun :: IO ()
 myfun = do
@@ -276,7 +280,7 @@ myfun = do
                 forkIO $ runJob counter reqQueue
                 putStrLn "end runJob"                
                 putStrLn "startdelay"
-                threadDelay 1000000
+                threadDelay second
                 putStrLn "endDelay"
                 return ()
 
