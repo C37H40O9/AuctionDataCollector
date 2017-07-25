@@ -183,7 +183,7 @@ takeAuctionInfo c rq m r = do
     let af = parseAucFile aj
     case af of
         Nothing -> return ()
-        Just x ->  addReqToQ rq $ ReqAucJson c rq m x
+        Just x ->  addReqToQ rq $ ReqAucJson c rq m x r
     
 
 
