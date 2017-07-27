@@ -32,6 +32,8 @@ import Data.Time.Format
 import System.Locale
 import Control.Monad.Trans.Class (lift)
 import Control.Concurrent
+import Control.Monad.STM
+import Control.Concurrent.STM.TChan
 import Foreign.StablePtr
 import qualified Control.Monad.Parallel as P 
 
@@ -183,10 +185,10 @@ takeAuctionInfo c rq m r = do
     let af = parseAucFile aj
     case af of
         Nothing -> return ()
-        Just x ->  addReqToQ rq $ ReqAucJson c rq m x r
+        Just x ->  addReqToQ rq $ ReqAucJson c rq m x r --TODO check updatedAt , add req to channel
     
 
-
+-- TODO must work with channel
 harvestAuctionJson :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a)) -> C.Manager -> AucFile -> Realm ->  IO ()--IO (Maybe (M.Map Int IStats))
 harvestAuctionJson c rq m a r = do 
     req <- C.parseRequest $ url a
@@ -219,7 +221,7 @@ incrCounter counter = do
     putMVar counter $ c + 1
 
 millisToUTC :: Integer -> UTCTime
-millisToUTC t = posixoneSecondsToUTCTime $ fromInteger t / 1000
+millisToUTC t = posixSecondsToUTCTime $ fromInteger t / 1000
 
 runRequest :: ReqParams c rq m r a -> IO()
 runRequest rp = case rp of 
@@ -246,16 +248,28 @@ runJob c rq = do
 
 oneSecond = 1000000 :: Int
 
+isActual :: MVar (M.Map String UTCTime) -> String -> UTCTime  -> IO Bool
+isActual m s t = do
+    m' <- readMVar m
+    let v = M.lookup s m'
+    case v of
+        Nothing -> return False
+        Just x -> return $ x >= t
+
+
+
 myfun :: IO ()
 myfun = do
     reqQueue <- newMVar S.empty :: IO (MVar (S.Seq (ReqParams (MVar Int) (ReqParams c rq m r a) C.Manager Realm AucFile )))
+    uploadChan <- atomically newTChan :: IO (TChan (ReqParams c rq m r a))
     counter <- newMVar 99 :: IO (MVar Int)
+    updatedAt <- newMVar M.empty :: IO (MVar (M.Map String UTCTime))
     newStablePtr reqQueue
     newStablePtr counter
     manager <- C.newManager C.tlsManagerSettings
     forkIO $ forever $ do 
         addReqToQ reqQueue (ReqRealms counter reqQueue manager)
-        threadDelay 120 * oneSecond
+        threadDelay $ 120 * oneSecond
     forever $ do 
                 --c <- readMVar counter
                 --print c 
