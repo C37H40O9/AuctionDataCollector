@@ -219,7 +219,7 @@ incrCounter counter = do
     putMVar counter $ c + 1
 
 millisToUTC :: Integer -> UTCTime
-millisToUTC t = posixSecondsToUTCTime $ fromInteger t / 1000
+millisToUTC t = posixoneSecondsToUTCTime $ fromInteger t / 1000
 
 runRequest :: ReqParams c rq m r a -> IO()
 runRequest rp = case rp of 
@@ -244,7 +244,7 @@ runJob c rq = do
             putMVar rq S.empty
             mapM_ (\x -> forkIO $ runRequest x) rq'
 
-second = 1000000 :: Int
+oneSecond = 1000000 :: Int
 
 myfun :: IO ()
 myfun = do
@@ -253,13 +253,15 @@ myfun = do
     newStablePtr reqQueue
     newStablePtr counter
     manager <- C.newManager C.tlsManagerSettings
-    addReqToQ reqQueue (ReqRealms counter reqQueue manager)    
+    forkIO $ forever $ do 
+        addReqToQ reqQueue (ReqRealms counter reqQueue manager)
+        threadDelay 120 * oneSecond
     forever $ do 
                 --c <- readMVar counter
                 --print c 
                 --q <- readMVar reqQueue
                 --print $ S.length q                
                 forkIO $ runJob counter reqQueue                
-                threadDelay second                
+                threadDelay oneSecond                
                 return ()
 
