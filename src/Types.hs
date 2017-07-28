@@ -12,7 +12,9 @@ import GHC.Generics
 import Data.Aeson
 import qualified Network.HTTP.Conduit as C
 import Control.Concurrent.MVar
-
+import Control.Concurrent.STM.TChan
+import Data.Time.Clock
+import qualified Data.Map.Strict as M
                 -- Type for whiskers box diagram
 data WBox = WBox { ic   :: Int  -- items count
                  , minW :: Int
@@ -57,9 +59,11 @@ data AucFile = AucFile { url          :: String
                        , lastModified :: Integer} deriving (Eq, Show, Generic)
 
 -- counter requestQueue manager realm aucfile 
-data ReqParams c rq m r a = ReqAuc     (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ))) C.Manager Realm 
-                          | ReqRealms  (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ))) C.Manager 
-                          | ReqAucJson (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ))) C.Manager AucFile Realm
+data ReqParams c rq m r a ch = ReqAuc     (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ch ))) C.Manager  (TChan (DLParams a r)) Realm 
+                             | ReqRealms  (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ch ))) C.Manager (TChan (DLParams a r))
+                             | ReqAucJson (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ch ))) C.Manager AucFile Realm
+
+data DLParams a r = DLAucJson AucFile Realm
 
 instance FromJSON AucFile {-where 
     parseJSON = withObject "file" $ \o -> do 
