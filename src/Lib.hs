@@ -228,7 +228,7 @@ millisToUTC t = posixSecondsToUTCTime $ fromInteger t / 1000
 runRequest :: ReqParams c rq m r a u -> IO()
 runRequest rp = case rp of 
     ReqAuc c rq m ch r    -> takeAuctionInfo c rq m ch r
-    ReqRealms c rq m ch      -> takeRealms c rq m ch
+    ReqRealms c rq m ch   -> takeRealms c rq m ch
     --ReqAucJson c rq m a r -> harvestAuctionJson c rq m a r
 
 
@@ -260,19 +260,19 @@ isActual m s t = do
 
 changeUpdTime :: MVar (M.Map String UTCTime) -> String -> UTCTime  -> IO ()
 changeUpdTime u s t = do
-    u' <- readMVar u
+    u' <- takeMVar u
     putMVar u $ M.insert s t u'
 
 
 updAucJson :: C.Manager -> TChan (DLParams a r) -> MVar (M.Map String UTCTime) -> IO ()
-updAucJson m ch u = forever $ do
+updAucJson m ch u =  do
     DLAucJson a r <- atomically $ readTChan ch
     let t = millisToUTC $ lastModified a 
         s = slug r 
     b <- isActual u s t 
-    unless b $
-        do harvestAuctionJson m a r
-           changeUpdTime u s t
+    unless b $ do 
+        harvestAuctionJson m a r
+        changeUpdTime u s t
     
         
 
@@ -286,8 +286,9 @@ myfun = do
     updatedAt <- newMVar M.empty :: IO (MVar (M.Map String UTCTime))
     newStablePtr reqQueue
     newStablePtr counter
+    newStablePtr updatedAt
     manager <- C.newManager C.tlsManagerSettings
-    forkIO $ updAucJson manager downloadChan updatedAt
+    forkIO $ forever $ updAucJson manager downloadChan updatedAt
     forkIO $ forever $ do 
         addReqToQ reqQueue (ReqRealms counter reqQueue manager downloadChan)
         threadDelay $ 120 * oneSecond
