@@ -260,7 +260,7 @@ changeUpdTime u s t = do
     putMVar u $ M.insert s t u'
 
 
-updAucJson :: C.Manager -> TChan (DLParams a r) -> MVar (M.Map String UTCTime) -> IO ()
+updAucJson :: C.Manager -> TChan (DLParams AucFile Realm) -> MVar (M.Map String UTCTime) -> IO ()
 updAucJson m ch u =  do
     DLAucJson a r <- atomically $ readTChan ch
     let t = millisToUTC $ lastModified a 
@@ -278,7 +278,7 @@ updAucJson m ch u =  do
 myfun :: IO ()
 myfun = do
     reqQueue <- newMVar S.empty :: IO (MVar (S.Seq (ReqParams c rq m r a ch)))
-    downloadChan <- atomically newTChan :: IO (TChan (DLParams a r))
+    downloadChan <- atomically newTChan :: IO (TChan (DLParams AucFile Realm))
     counter <- newMVar 99 :: IO (MVar Int)
     updatedAt <- newMVar M.empty :: IO (MVar (M.Map String UTCTime))
     newStablePtr reqQueue

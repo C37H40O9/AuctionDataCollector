@@ -1,6 +1,6 @@
 --What database and library should I use
 {-
-
+wow_adp@pass
 Titems
 itemId | itemName
 

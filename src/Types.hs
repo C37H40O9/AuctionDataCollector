@@ -62,8 +62,8 @@ data AucFile = AucFile { url          :: String
                        , lastModified :: Integer} deriving (Eq, Show, Generic)
 
 -- counter requestQueue manager realm aucfile 
-data ReqParams c rq m r a ch = ReqAuc     (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ch ))) C.Manager  (TChan (DLParams a r)) Realm 
-                             | ReqRealms  (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ch ))) C.Manager (TChan (DLParams a r))
+data ReqParams c rq m r a ch = ReqAuc     (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ch ))) C.Manager  (TChan (DLParams AucFile Realm)) Realm 
+                             | ReqRealms  (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ch ))) C.Manager (TChan (DLParams AucFile Realm))
                              | ReqAucJson (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ch ))) C.Manager AucFile Realm
 
 data DLParams a r = DLAucJson AucFile Realm
