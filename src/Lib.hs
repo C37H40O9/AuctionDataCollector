@@ -203,12 +203,12 @@ harvestAuctionJson m ti a r = do
 
 
 
-addReqToQ :: MVar (S.Seq (ReqParams c rq m r a u)) -> ReqParams c rq m r a u -> IO ()
+addReqToQ :: MVar (S.Seq (ReqParams c rq m r a ch)) -> ReqParams c rq m r a ch -> IO ()
 addReqToQ rq reqParam = do 
     rq' <- takeMVar rq 
     putMVar rq $ rq' S.|> reqParam 
 
-addReqsToQ :: MVar (S.Seq (ReqParams c rq m r a u)) -> S.Seq(ReqParams c rq m r a u) -> IO ()
+addReqsToQ :: MVar (S.Seq (ReqParams c rq m r a ch)) -> S.Seq(ReqParams c rq m r a ch) -> IO ()
 addReqsToQ rq reqParams = do
     rq' <- takeMVar rq
     putMVar rq $ rq' S.>< reqParams
