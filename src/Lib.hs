@@ -78,7 +78,7 @@ someFunc2 = do
 
 parseToBox :: [Int] -> WBox
 parseToBox [i, a, b, c, d, e, f, g] = WBox i a b c d e f g
---parseToBox _ = Nothing
+
 
 seqToBox :: S.Seq Int -> Maybe WBox
 seqToBox s = if S.null s then Nothing
@@ -150,13 +150,7 @@ statsConcat  s1 s2 = IStats bi bu
 collect ::  [Auction] -> M.Map Int IStats
 collect  = foldl' (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b ) M.empty 
 
-{- TODO 
-doReq :: ReqParams C.Manager Realm -> IO ()
-doReq r = case r of 
-    ReqRealms m -> takeRealms m
-    ReqAuc m r -> takeAuctionInfo m r
 
--}
 takeRealms :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a ch)) -> C.Manager -> TChan(DLParams a r) -> IO ()
 takeRealms c rq m ch = do    
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> apikey    
@@ -232,7 +226,6 @@ runRequest :: ReqParams c rq m r a u -> IO()
 runRequest rp = case rp of 
     ReqAuc c rq m ch r    -> takeAuctionInfo c rq m ch r
     ReqRealms c rq m ch   -> takeRealms c rq m ch
-    --ReqAucJson c rq m a r -> harvestAuctionJson c rq m a r
 
 
 runJob :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a ch)) -> IO ()
@@ -296,11 +289,7 @@ myfun = do
     forkIO $ forever $ do 
         addReqToQ reqQueue (ReqRealms counter reqQueue manager downloadChan)
         threadDelay $ 120 * oneSecond
-    forever $ do 
-                --c <- readMVar counter
-                --print c 
-                --q <- readMVar reqQueue
-                --print $ S.length q                
+    forever $ do                               
                 forkIO $ runJob counter reqQueue                
                 threadDelay oneSecond                
                 return ()
