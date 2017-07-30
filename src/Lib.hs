@@ -80,8 +80,9 @@ parseToBox :: [Int] -> WBox
 parseToBox [i, a, b, c, d, e, f, g] = WBox i a b c d e f g
 --parseToBox _ = Nothing
 
-seqToBox :: S.Seq Int -> WBox
-seqToBox s = parseToBox  $ l : ws 
+seqToBox :: S.Seq Int -> Maybe WBox
+seqToBox s = if S.null s then Nothing
+            else Just $ parseToBox  $ l : ws 
                    where 
                         l = S.length s - 1
                         s' = S.sort s
@@ -89,8 +90,8 @@ seqToBox s = parseToBox  $ l : ws
                         ix = quot . (*l) <$> [0,9,25,50,75,91,100] <*> pure 100
                         ws = S.index s' <$> ix
                    
-seqStatsToBoxed :: IStats -> BoxedStats
-seqStatsToBoxed s = BoxedStats (seqToBox $ bid' s) (seqToBox $ buyout' s)
+seqStatsToWBoxed :: IStats -> WBoxedStats
+seqStatsToWBoxed s = BoxedStats (seqToBox $ bid' s) (seqToBox $ buyout' s)
 
 itemsFile :: FilePath
 itemsFile = "items.json"
@@ -202,7 +203,7 @@ harvestAuctionJson m ti a r = do
     let as = parseAuctions aj    
     case as of
         Nothing -> return ()
-        Just x -> print $  M.map seqStatsToBoxed $ collect $ filter (\x -> itemId x `elem` ti) x 
+        Just x -> print $  M.map seqStatsToWBoxed $ collect $ filter (\x -> itemId x `elem` ti) x 
     
 
 
