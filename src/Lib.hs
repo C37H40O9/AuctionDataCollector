@@ -238,11 +238,11 @@ runJob c rq = do
             putMVar c 0
             let (r,t) = S.splitAt c' rq'
             putMVar rq t
-            mapM_ (\x -> forkIO $ runRequest x) r 
+            mapM_ (forkIO . runRequest) r 
         else do 
             putMVar c (c' - rqlen)            
             putMVar rq S.empty
-            mapM_ (\x -> forkIO $ runRequest x) rq'
+            mapM_ (forkIO . runRequest) rq'
 
 oneSecond = 1000000 :: Int
 
