@@ -23,7 +23,7 @@ data WBox = WBox { ic   :: Int  -- items count
                  , p50  :: Int
                  , p75  :: Int
                  , topW :: Int
-                 , maxW :: Int } deriving Show
+                 , maxW :: Int } deriving (Eq, Show)
 
 data Item = Item { name :: String
                  , iid :: Int
@@ -39,7 +39,9 @@ data IStats = IStats { bid' :: S.Seq Int
                      , buyout' :: S.Seq Int
                      } deriving (Eq, Show)
 
-
+data BoxedStats = BoxedStats { bbid :: WBox
+                             , bbuyout :: WBox
+                             } deriving (Eq, Show)
 
 newtype AuctionS = AuctionS {auctions :: [Auction]} deriving (Eq, Show)
 

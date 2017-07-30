@@ -40,8 +40,8 @@ import qualified Control.Monad.Parallel as P
 
 
 
-someFunc :: IO [Int]
-someFunc = do
+trackingItems :: IO [Int]
+trackingItems = do
     res <- itemsDec
     case res of
         Left err -> return []
@@ -76,12 +76,12 @@ someFunc2 = do
             -}
 
 
-parseToBox :: [Int] -> Maybe WBox
-parseToBox [i, a, b, c, d, e, f, g] = Just (WBox i a b c d e f g)
-parseToBox _ = Nothing
+parseToBox :: [Int] -> WBox
+parseToBox [i, a, b, c, d, e, f, g] = WBox i a b c d e f g
+--parseToBox _ = Nothing
 
-statToBox :: S.Seq Int -> Maybe WBox
-statToBox s = parseToBox  $ l : ws 
+seqToBox :: S.Seq Int -> WBox
+seqToBox s = parseToBox  $ l : ws 
                    where 
                         l = S.length s - 1
                         s' = S.sort s
@@ -89,7 +89,8 @@ statToBox s = parseToBox  $ l : ws
                         ix = quot . (*l) <$> [0,9,25,50,75,91,100] <*> pure 100
                         ws = S.index s' <$> ix
                    
-                        
+seqStatsToBoxed :: IStats -> BoxedStats
+seqStatsToBoxed s = BoxedStats (seqToBox $ bid' s) (seqToBox $ buyout' s)
 
 itemsFile :: FilePath
 itemsFile = "items.json"
@@ -188,19 +189,20 @@ takeAuctionInfo c rq m ch r = do
         Just x ->  atomically $ writeTChan ch (DLAucJson x r)
     
 
--- TODO must work with channel
-harvestAuctionJson :: C.Manager -> AucFile -> Realm ->  IO ()--IO (Maybe (M.Map Int IStats))
-harvestAuctionJson m a r = do
+
+harvestAuctionJson :: C.Manager -> [Int] -> AucFile -> Realm ->  IO ()
+{-# INLINE harvestAuctionJson #-}
+harvestAuctionJson m ti a r = do
     req <- C.parseRequest $ url a
     putStrLn $ slug r <> " @ " <> show (millisToUTC $ lastModified a)
-    {-
+    
     aj<-runResourceT $ do 
             response <- C.httpLbs (setRequestIgnoreStatus req) m
             return $ C.responseBody response
-    let as = parseAuctions aj
+    let as = parseAuctions aj    
     case as of
         Nothing -> return ()
-        Just x -> print $  collect x -}
+        Just x -> print $  M.map seqStatsToBoxed $ collect $ filter (\x -> itemId x `elem` ti) x 
     
 
 
@@ -271,7 +273,8 @@ updAucJson m ch u =  do
         s = slug r 
     b <- isActual u s t 
     unless b $ do 
-        harvestAuctionJson m a r
+        ti <- trackingItems
+        harvestAuctionJson m ti a r
         changeUpdTime u s t
     
         
