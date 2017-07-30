@@ -134,7 +134,7 @@ parseRealms x = parseMaybe realmsParser =<< decode x
 
 aucToIStats :: Auction -> IStats
 aucToIStats a = IStats { bid'    = S.replicate (quantity a) (quot  (bid a)    (quantity a))
-                       , buyout' = S.replicate (quantity a) (quot  (buyout a) (quantity a))                
+                       , buyout' = if buyout a > 0 then S.replicate (quantity a) (quot  (buyout a) (quantity a))  else S.empty              
                        }
 
 statsConcat :: IStats -> IStats -> IStats
