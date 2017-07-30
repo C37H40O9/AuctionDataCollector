@@ -40,7 +40,7 @@ import qualified Control.Monad.Parallel as P
 
 
 
-trackingItems :: IO [Int]
+trackingItems :: IO TrackingItems
 trackingItems = do
     res <- itemsDec
     case res of
@@ -185,7 +185,7 @@ takeAuctionInfo c rq m ch r = do
     
 
 
-harvestAuctionJson :: C.Manager -> [Int] -> AucFile -> Realm ->  IO ()
+harvestAuctionJson :: C.Manager -> TrackingItems -> AucFile -> Realm ->  IO ()
 {-# INLINE harvestAuctionJson #-}
 harvestAuctionJson m ti a r = do
     req <- C.parseRequest $ url a

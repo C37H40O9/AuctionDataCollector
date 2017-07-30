@@ -49,6 +49,8 @@ newtype ItemS = ItemS {items :: [Item]} deriving (Eq, Show)
 
 type Region = String
 
+type TrackingItems = [Int]
+
 data Realm = Realm
              { rname :: String
              , slug :: String
