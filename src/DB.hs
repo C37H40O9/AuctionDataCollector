@@ -6,7 +6,7 @@ DB scheme
 
 CREATE TABLE bid
 (
-    bid_date timestamp with timezone NOT NULL,
+    bid_date timestamptz NOT NULL,
     server_slug text NOT NULL,
     item_id integer NOT NULL REFERENCES items,
     item_count integer NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE bid
 
 CREATE TABLE buyout
 (
-    buyout_date timestamp with timezone NOT NULL,
+    buyout_date timestamptz NOT NULL,
     server_slug text NOT NULL,
     item_id integer NOT NULL REFERENCES items,
     item_count integer NOT NULL,
