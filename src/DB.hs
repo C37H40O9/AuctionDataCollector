@@ -1,21 +1,65 @@
 --What database and library should I use
 {-
 wow_adp@pass
-Titems
-itemId | itemName
 
-Realms
-slug | 
+DB scheme
 
-TAucStatsBid
+CREATE TABLE bid
+(
+    bid_date timestamp with timezone NOT NULL,
+    server_slug text NOT NULL,
+    item_id integer NOT NULL REFERENCES items,
+    item_count integer NOT NULL,
+    min_w bigint NOT NULL,
+    bot_w bigint NOT NULL,
+    p_25 bigint NOT NULL,
+    p_50 bigint NOT NULL,
+    p_75 bigint NOT NULL,
+    top_w bigint NOT NULL,
+    max_w bigint NOT NULL,
+    UNIQUE (bid_date, server_slug, item_id)
+);
 
-itemId | date | realm(slug) | itemCount | minW | botW | p25 | p50 | p75 | topW | maxW 
+CREATE TABLE buyout
+(
+    buyout_date timestamp with timezone NOT NULL,
+    server_slug text NOT NULL,
+    item_id integer NOT NULL REFERENCES items,
+    item_count integer NOT NULL,
+    min_w bigint NOT NULL,
+    bot_w bigint NOT NULL,
+    p_25 bigint NOT NULL,
+    p_50 bigint NOT NULL,
+    p_75 bigint NOT NULL,
+    top_w bigint NOT NULL,
+    max_w bigint NOT NULL,
+    UNIQUE (buyout_date, server_slug, item_id)
+);
+    
+CEATE TABLE recipes
+(
+    recipe_id integer PRIMARY KEY,
+    item_id integer REFERENCE items,
+    recipe_name text
+);
 
-TAucStatsBuyout
+CREATE TABLE items
+(
+    item_id integer PRIMARY KEY
+);
 
-itemId | date | realm(slug) | itemCount | minW | botW | p25 | p50 | p75 | topW | maxW 
+CREATE TABLE recipe_items
+(
+    item_id integer REFERENCES items,
+    recipe_id integer REFERENCES recipes ON DELETE CASCADE,
+    quantity integer,
+    PRIMARY KEY (item_id, recipe_id)
+);
 
-
-
+CREATE TABLE last_modified
+(
+    upd_date timestamp with time zone,
+    server_slug text PRIMARY KEY
+)
 
 -}
