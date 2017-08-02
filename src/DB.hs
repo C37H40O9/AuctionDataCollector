@@ -58,7 +58,7 @@ CREATE TABLE recipe_items
 
 CREATE TABLE last_modified
 (
-    upd_date timestamp with time zone,
+    upd_date timestamptz,
     server_slug text PRIMARY KEY
 )
 
