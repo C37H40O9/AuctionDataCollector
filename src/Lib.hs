@@ -35,7 +35,8 @@ import Control.Concurrent
 import Control.Monad.STM
 import Control.Concurrent.STM.TChan
 import Foreign.StablePtr
-import qualified Control.Monad.Parallel as P 
+import qualified Control.Monad.Parallel as P
+import Control.Concurrent.Async
 
 
 
@@ -151,7 +152,7 @@ collect ::  [Auction] -> M.Map Int IStats
 collect  = foldl' (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b ) M.empty 
 
 
-takeRealms :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a ch)) -> C.Manager -> TChan(DLParams a r) -> IO ()
+takeRealms :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a ch)) -> C.Manager -> TChan(DLParams AucFile Realm) -> IO ()
 takeRealms c rq m ch = do    
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> apikey    
     bs<-runResourceT $ do               
@@ -171,7 +172,7 @@ filterRealms (x:xs) = x : t
     where t = filterRealms $ filter (\y -> slug x `notElem` connectedRealms y ) xs
 
 
-takeAuctionInfo :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a u)) -> C.Manager -> TChan (DLParams a r)  -> Realm -> IO () -- request realm auction info from bnet api
+takeAuctionInfo :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a u)) -> C.Manager -> TChan (DLParams AucFile Realm)  -> Realm -> IO () -- request realm auction info from bnet api
 takeAuctionInfo c rq m ch r = do 
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/auction/data/" <> slug r <> "?locale=en_GB&apikey=" <> apikey
     aj<-runResourceT $ do            
@@ -222,7 +223,7 @@ incrCounter counter = do
 millisToUTC :: Integer -> UTCTime
 millisToUTC t = posixSecondsToUTCTime $ fromInteger t / 1000
 
-runRequest :: ReqParams c rq m r a u -> IO()
+runRequest :: ReqParams c rq m r a ch -> IO()
 runRequest rp = case rp of 
     ReqAuc c rq m ch r    -> takeAuctionInfo c rq m ch r
     ReqRealms c rq m ch   -> takeRealms c rq m ch
@@ -238,11 +239,11 @@ runJob c rq = do
             putMVar c 0
             let (r,t) = S.splitAt c' rq'
             putMVar rq t
-            mapM_ (forkIO . runRequest) r 
+            mapConcurrently_ runRequest r --mapM_ (forkIO . runRequest) r 
         else do 
             putMVar c (c' - rqlen)            
             putMVar rq S.empty
-            mapM_ (forkIO . runRequest) rq'
+            mapConcurrently_ runRequest rq' --mapM_ (forkIO . runRequest) rq'
 
 oneSecond = 1000000 :: Int
 
