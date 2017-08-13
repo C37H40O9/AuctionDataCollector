@@ -1,4 +1,21 @@
---What database and library should I use
+{-# LANGUAGE OverloadedStrings #-}
+
+module DB 
+    where
+
+import Database.PostgreSQL.Simple
+
+-- TODO read all configuration and credentials from file
+connInfo = ConnectInfo {
+    connectHost = "127.0.0.1"
+  , connectPort = 5432
+  , connectUser = "wow_adp"
+  , connectPassword = "pass"
+  , connectDatabase = "wow_adp_db"
+  }
+
+-- conn <- connect connInfo
+
 {-
 wow_adp@pass
 
