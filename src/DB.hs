@@ -1,9 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module DB 
     where
 
 import Database.PostgreSQL.Simple
+import Database.PostgreSQL.Simple.SqlQQ
 
 -- TODO read all configuration and credentials from file
 connInfo = ConnectInfo {
@@ -11,12 +14,30 @@ connInfo = ConnectInfo {
   , connectPort = 5432
   , connectUser = "wow_adp"
   , connectPassword = "pass"
-  , connectDatabase = "wow_adp_db"
+  , connectDatabase = "wowadp_db"
   }
 
--- conn <- connect connInfo
+--conn = connect connInfo
 
+initTableBid conn =execute_ conn [sql|
+        CREATE TABLE IF NOT EXISTS bid
+            (
+                 bid_date timestamptz NOT NULL,
+                 server_slug text NOT NULL,
+                 item_id int4 NOT NULL REFERENCES items,
+                 item_count int4 NOT NULL,
+                 min_w int8 NOT NULL,
+                 bot_w int8 NOT NULL,
+                 p_25 int8 NOT NULL,
+                 p_50 int8 NOT NULL,
+                 p_75 int8 NOT NULL,
+                 top_w int8 NOT NULL,
+                 max_w int8 NOT NULL,
+                 UNIQUE (bid_date, server_slug, item_id)
+            )
+                |]
 {-
+wowadp_db
 wow_adp@pass
 
 DB scheme
