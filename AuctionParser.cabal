@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Lib
                       ,Types
+                      ,DB
   build-depends:       base >= 4.7 && < 5
                       ,text
                       ,bytestring
@@ -34,6 +35,7 @@ library
                       ,stm
                       ,async
                       ,postgresql-simple
+                      ,postgresql-simple-migration
                       
   default-language:    Haskell2010
 
@@ -56,4 +58,4 @@ test-suite AuctionParser-test
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/AuctionParser
+  location: https://github.com/gore-v/AuctionParser

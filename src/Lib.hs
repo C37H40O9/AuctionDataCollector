@@ -10,6 +10,7 @@
 module Lib
      where
 import Types
+import DB
 import qualified Data.Map.Strict as M
 import qualified Data.Sequence as S
 import qualified Data.ByteString.Lazy as B
@@ -278,6 +279,7 @@ updAucJson m ch u =  do
 
 myfun :: IO ()
 myfun = do
+    initMigrations 
     reqQueue <- newMVar S.empty :: IO (MVar (S.Seq (ReqParams c rq m r a ch)))
     downloadChan <- atomically newTChan :: IO (TChan (DLParams AucFile Realm))
     counter <- newMVar 99 :: IO (MVar Int)
