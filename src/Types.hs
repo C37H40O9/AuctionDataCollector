@@ -62,18 +62,18 @@ data AucFile = AucFile { url          :: String
                        , lastModified :: Integer} deriving (Eq, Show, Generic)
 
 -- counter requestQueue manager realm aucfile 
-data ReqParams c rq m r a ch = ReqAuc     (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ch ))) C.Manager  (TChan (DLParams AucFile Realm)) Realm 
-                             | ReqRealms  (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ch ))) C.Manager (TChan (DLParams AucFile Realm))
-                             | ReqAucJson (MVar Int) (MVar (S.Seq (ReqParams c rq m r a ch ))) C.Manager AucFile Realm
+data ReqParams = ReqAuc     (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager  (TChan (DLParams AucFile Realm)) Realm 
+               | ReqRealms  (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager (TChan (DLParams AucFile Realm))
+               | ReqAucJson (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager AucFile Realm
 
 data DLParams a r = DLAucJson AucFile Realm
 
-instance FromJSON AucFile {-where 
+instance FromJSON AucFile where 
     parseJSON = withObject "file" $ \o -> do 
         url <- o .: "url"
         lastModified <- o .: "lastModified"
         return AucFile{..}
--}
+
 instance FromJSON AuctionS where
     parseJSON = withObject "auctions" $ \o -> do
         auctions <- o .: "auctions"

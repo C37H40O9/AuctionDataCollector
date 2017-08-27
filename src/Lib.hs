@@ -38,6 +38,8 @@ import Control.Concurrent.STM.TChan
 import Foreign.StablePtr
 import qualified Control.Monad.Parallel as P
 import Control.Concurrent.Async
+import Data.Configurator
+import Database.PostgreSQL.Simple
 
 
 
@@ -153,7 +155,7 @@ collect ::  [Auction] -> M.Map Int IStats
 collect  = foldl' (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b ) M.empty 
 
 
-takeRealms :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a ch)) -> C.Manager -> TChan(DLParams AucFile Realm) -> IO ()
+takeRealms :: MVar Int -> MVar (S.Seq ReqParams) -> C.Manager -> TChan(DLParams AucFile Realm) -> IO ()
 takeRealms c rq m ch = do    
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> apikey    
     bs<-runResourceT $ do               
@@ -173,7 +175,7 @@ filterRealms (x:xs) = x : t
     where t = filterRealms $ filter (\y -> slug x `notElem` connectedRealms y ) xs
 
 
-takeAuctionInfo :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a u)) -> C.Manager -> TChan (DLParams AucFile Realm)  -> Realm -> IO () -- request realm auction info from bnet api
+takeAuctionInfo :: MVar Int -> MVar (S.Seq ReqParams ) -> C.Manager -> TChan (DLParams AucFile Realm)  -> Realm -> IO () -- request realm auction info from bnet api
 takeAuctionInfo c rq m ch r = do 
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/auction/data/" <> slug r <> "?locale=en_GB&apikey=" <> apikey
     aj<-runResourceT $ do            
@@ -188,7 +190,7 @@ takeAuctionInfo c rq m ch r = do
 
 
 harvestAuctionJson :: C.Manager -> TrackingItems -> AucFile -> Realm ->  IO ()
-{-# INLINE harvestAuctionJson #-}
+
 harvestAuctionJson m ti a r = do
     req <- C.parseRequest $ url a
     putStrLn $ slug r <> " @ " <> show (millisToUTC $ lastModified a)
@@ -205,12 +207,12 @@ harvestAuctionJson m ti a r = do
 
 
 
-addReqToQ :: MVar (S.Seq (ReqParams c rq m r a ch)) -> ReqParams c rq m r a ch -> IO ()
+addReqToQ :: MVar (S.Seq ReqParams ) -> ReqParams  -> IO ()
 addReqToQ rq reqParam = do 
     rq' <- takeMVar rq 
     putMVar rq $ rq' S.|> reqParam 
 
-addReqsToQ :: MVar (S.Seq (ReqParams c rq m r a ch)) -> S.Seq(ReqParams c rq m r a ch) -> IO ()
+addReqsToQ :: MVar (S.Seq ReqParams ) -> S.Seq ReqParams  -> IO ()
 addReqsToQ rq reqParams = do
     rq' <- takeMVar rq
     putMVar rq $ rq' S.>< reqParams
@@ -224,13 +226,13 @@ incrCounter counter = do
 millisToUTC :: Integer -> UTCTime
 millisToUTC t = posixSecondsToUTCTime $ fromInteger t / 1000
 
-runRequest :: ReqParams c rq m r a ch -> IO()
+runRequest :: ReqParams  -> IO()
 runRequest rp = case rp of 
     ReqAuc c rq m ch r    -> takeAuctionInfo c rq m ch r
     ReqRealms c rq m ch   -> takeRealms c rq m ch
 
 
-runJob :: MVar Int -> MVar (S.Seq (ReqParams c rq m r a ch)) -> IO ()
+runJob :: MVar Int -> MVar (S.Seq ReqParams ) -> IO ()
 runJob c rq = do 
     c' <- takeMVar c 
     rq' <- takeMVar rq
@@ -279,14 +281,26 @@ updAucJson m ch u =  do
 
 myfun :: IO ()
 myfun = do
-    initMigrations 
-    reqQueue <- newMVar S.empty :: IO (MVar (S.Seq (ReqParams c rq m r a ch)))
+    conf <- load [Required "./config.cfg"]
+    let subconf = subconfig "database" conf
+    dbuser <- require subconf "username"
+    dbpass <- require subconf "password"
+    dbname <- require subconf "database"
+    dbhost <- require subconf "host"
+    dbport <- require subconf "port"
+    apikey <- require conf "api.key" :: IO String
+    let connInfo = ConnectInfo { connectHost = dbhost
+                               , connectPort = dbport
+                               , connectUser = dbuser
+                               , connectPassword = dbpass
+                               , connectDatabase = dbname
+                               }
+    conn <- connect connInfo
+    initMigrations conn
+    reqQueue <- newMVar S.empty :: IO (MVar (S.Seq ReqParams ))
     downloadChan <- atomically newTChan :: IO (TChan (DLParams AucFile Realm))
     counter <- newMVar 99 :: IO (MVar Int)
-    updatedAt <- newMVar M.empty :: IO (MVar (M.Map String UTCTime))
-    newStablePtr reqQueue
-    newStablePtr counter
-    newStablePtr updatedAt
+    updatedAt <- newMVar M.empty :: IO (MVar (M.Map String UTCTime))    
     manager <- C.newManager C.tlsManagerSettings
     forkIO $ forever $ updAucJson manager downloadChan updatedAt
     forkIO $ forever $ do 

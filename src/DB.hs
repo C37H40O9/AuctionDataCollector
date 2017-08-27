@@ -18,14 +18,15 @@ connInfo = ConnectInfo {
   , connectDatabase = "wowadp_db"
   }
 
+
+
 --conn = connect connInfo
-initMigrations = do
-    conn <- connect connInfo
+initMigrations conn = do    
     res<- runMigrations False conn [MigrationInitialization, MigrationDirectory "migrations"]
     case res of
         MigrationSuccess -> return ()
         MigrationError reason -> print reason
-initTables = undefined
+
 
 
 {-
