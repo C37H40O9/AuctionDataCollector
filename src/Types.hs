@@ -49,6 +49,8 @@ newtype ItemS = ItemS {items :: [Item]} deriving (Eq, Show)
 
 type Region = String
 
+type ApiKey = String
+
 type TrackingItems = [Int]
 
 data Realm = Realm
@@ -62,9 +64,9 @@ data AucFile = AucFile { url          :: String
                        , lastModified :: Integer} deriving (Eq, Show, Generic)
 
 -- counter requestQueue manager realm aucfile 
-data ReqParams = ReqAuc     (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager  (TChan (DLParams AucFile Realm)) Realm 
-               | ReqRealms  (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager (TChan (DLParams AucFile Realm))
-               | ReqAucJson (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager AucFile Realm
+data ReqParams = ReqAuc     ApiKey (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager  (TChan (DLParams AucFile Realm)) Realm 
+               | ReqRealms  ApiKey (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager (TChan (DLParams AucFile Realm))
+               -- | ReqAucJson (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager AucFile Realm
 
 data DLParams a r = DLAucJson AucFile Realm
 

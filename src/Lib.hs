@@ -107,8 +107,7 @@ itemsDec ::  IO (Either String ItemS)
 itemsDec = fmap eitherDecode' getItemsJSON
 
 
-apikey :: String
-apikey = "vrh7sn2zntq4vu7wntkxmd64jwq2ahny"
+
 
 
 aucFilesParser :: Value -> Parser [AucFile]
@@ -155,9 +154,9 @@ collect ::  [Auction] -> M.Map Int IStats
 collect  = foldl' (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b ) M.empty 
 
 
-takeRealms :: MVar Int -> MVar (S.Seq ReqParams) -> C.Manager -> TChan(DLParams AucFile Realm) -> IO ()
-takeRealms c rq m ch = do    
-    req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> apikey    
+takeRealms :: ApiKey -> MVar Int -> MVar (S.Seq ReqParams) -> C.Manager -> TChan(DLParams AucFile Realm) -> IO ()
+takeRealms k c rq m ch = do    
+    req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> k    
     bs<-runResourceT $ do               
                response <- C.httpLbs (setRequestIgnoreStatus req) m                                       
                return $  C.responseBody response
@@ -165,7 +164,7 @@ takeRealms c rq m ch = do
     let rr =  parseRealms bs    
     case rr of 
         Nothing -> return ()
-        Just x -> addReqsToQ rq $ S.fromList $ map (ReqAuc c rq m ch ) $ filterRealms x
+        Just x -> addReqsToQ rq $ S.fromList $ map (ReqAuc k c rq m ch ) $ filterRealms x
     
 
 
@@ -175,9 +174,9 @@ filterRealms (x:xs) = x : t
     where t = filterRealms $ filter (\y -> slug x `notElem` connectedRealms y ) xs
 
 
-takeAuctionInfo :: MVar Int -> MVar (S.Seq ReqParams ) -> C.Manager -> TChan (DLParams AucFile Realm)  -> Realm -> IO () -- request realm auction info from bnet api
-takeAuctionInfo c rq m ch r = do 
-    req <- C.parseRequest $  "https://eu.api.battle.net/wow/auction/data/" <> slug r <> "?locale=en_GB&apikey=" <> apikey
+takeAuctionInfo :: ApiKey -> MVar Int -> MVar (S.Seq ReqParams ) -> C.Manager -> TChan (DLParams AucFile Realm)  -> Realm -> IO () -- request realm auction info from bnet api
+takeAuctionInfo k c rq m ch r = do 
+    req <- C.parseRequest $  "https://eu.api.battle.net/wow/auction/data/" <> slug r <> "?locale=en_GB&apikey=" <> k
     aj<-runResourceT $ do            
             response <- C.httpLbs  (setRequestIgnoreStatus req) m
             return $ C.responseBody response  
@@ -228,8 +227,8 @@ millisToUTC t = posixSecondsToUTCTime $ fromInteger t / 1000
 
 runRequest :: ReqParams  -> IO()
 runRequest rp = case rp of 
-    ReqAuc c rq m ch r    -> takeAuctionInfo c rq m ch r
-    ReqRealms c rq m ch   -> takeRealms c rq m ch
+    ReqAuc k c rq m ch r    -> takeAuctionInfo k c rq m ch r
+    ReqRealms k c rq m ch   -> takeRealms k c rq m ch
 
 
 runJob :: MVar Int -> MVar (S.Seq ReqParams ) -> IO ()
@@ -288,7 +287,7 @@ myfun = do
     dbname <- require subconf "database"
     dbhost <- require subconf "host"
     dbport <- require subconf "port"
-    apikey <- require conf "api.key" :: IO String
+    apikey <- require conf "api.key" :: IO ApiKey
     let connInfo = ConnectInfo { connectHost = dbhost
                                , connectPort = dbport
                                , connectUser = dbuser
@@ -304,7 +303,7 @@ myfun = do
     manager <- C.newManager C.tlsManagerSettings
     forkIO $ forever $ updAucJson manager downloadChan updatedAt
     forkIO $ forever $ do 
-        addReqToQ reqQueue (ReqRealms counter reqQueue manager downloadChan)
+        addReqToQ reqQueue (ReqRealms apikey counter reqQueue manager downloadChan)
         threadDelay $ 120 * oneSecond
     forever $ do                               
                 forkIO $ runJob counter reqQueue                
