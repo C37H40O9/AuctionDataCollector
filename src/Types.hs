@@ -53,6 +53,19 @@ type ApiKey = String
 
 type TrackingItems = [Int]
 
+data Profession = Alchemy
+                | Engineering
+                | Leatherworking
+                | Blacksmith
+                | Enchanting
+                | Inscription
+                | Tailoring
+                | Skinning
+                | Jewelcrafting
+                | Herbalism
+                | Mining
+                | World
+
 data Realm = Realm
              { rname :: String
              , slug :: String
