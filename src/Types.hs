@@ -47,7 +47,6 @@ newtype AuctionS = AuctionS {auctions :: [Auction]} deriving (Eq, Show)
 
 newtype ItemS = ItemS {items :: [Item]} deriving (Eq, Show)
 
-type Region = String
 
 type ApiKey = String
 
