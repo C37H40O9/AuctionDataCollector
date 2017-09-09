@@ -51,34 +51,6 @@ trackingItems = do
         Left err -> return []
         Right i -> return $ map iid (items i)
 
-inames :: IO [(Int,String)]
-inames = do
-    res <- itemsDec
-    case res of
-        Left err -> return []
-        Right i -> return $ map (liftA2 (,) iid  name ) (items i)
-
-{-
-someFunc2 :: IO ()
-someFunc2 = do
-    res <- aucsDec
-    inam <- inames 
-    case res of
-        Left err -> putStrLn err
-        Right a -> do
-            ids <- someFunc
-            let aucList =  filter (\x -> itemId x `elem` ids) (auctions a)
-            let m = collect aucList
-            mapM_ print $ M.assocs $ M.map (statToBox . buyout') m
-            
-            let aucList = map aucToTuple $ filter (\x -> itemId x `elem` ids) (auctions a)
-            let avg = [(the iid, sum bid, sum buyout, sum quantity)
-                      | (iid, bid, buyout, quantity) <- aucList
-                      , then group by iid using groupWith
-                      , then sortWith by sum quantity]            
-            mapM_ (putStrLn . (\(l,i1,i2,i3)-> l <> " " <> show i1 <> " " <> show i2 <> " " <> show i3)) [(n,b,byu,c) | (i,n) <- inam , (ii,b,byu,c) <- avg, i==ii]
-            -}
-
 
 parseToBox :: [Int] -> WBox
 parseToBox [i, a, b, c, d, e, f, g] = WBox i a b c d e f g
