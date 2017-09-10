@@ -15,6 +15,17 @@ import Control.Concurrent.MVar
 import Control.Concurrent.STM.TChan
 import Data.Time.Clock
 import qualified Data.Map.Strict as M
+import Prelude hiding (Applicative(..), print)
+import Data.Maybe (fromJust)
+import Text.Syntax
+import Text.Syntax.Parser.Naive
+import Text.Syntax.Printer.Naive
+import qualified Data.HashMap.Lazy as HML        ( lookup )
+import qualified Data.Text.Lazy as TL
+import qualified Control.Applicative as CA                      ( empty, pure )
+import qualified Data.Aeson.Types  as AT                        ( Parser )
+import Data.Text                                 ( pack )
+
                 -- Type for whiskers box diagram
 data WBox = WBox { ic   :: Int  -- items count
                  , minW :: Int
@@ -63,12 +74,45 @@ data Profession = Alchemy
                 | Jewelcrafting
                 | Herbalism
                 | Mining
-                | World
+                | World deriving (Eq, Show)
+
+type Slug = String
+
+data Locale = DE_DE
+            | EN_GB
+            | ES_ES
+            | FR_FR
+            | IT_IT
+            | PT_BR
+            | RU_RU deriving (Eq, Ord, Generic)
+
+
+pLocale :: Syntax f => f Locale
+pLocale =  pure DE_DE <* text "de_DE"
+       <|> pure EN_GB <* text "en_GB"
+       <|> pure ES_ES <* text "es_ES"
+       <|> pure FR_FR <* text "fr_FR"
+       <|> pure IT_IT <* text "it_IT"
+       <|> pure PT_BR <* text "pt_BR"
+       <|> pure RU_RU <* text "ru_RU"
+    
+runParser (Parser p) = p
+
+instance Read Locale where readsPrec _ = runParser pLocale
+
+instance Show Locale where show = fromJust . print pLocale
+
+instance FromJSON Locale where
+    parseJSON (String t) =  fromString (TL.unpack (TL.fromStrict t))
+        where fromString :: String -> AT.Parser Locale
+              fromString s = CA.pure (read s :: Locale)
+    parseJSON _ = CA.empty
 
 data Realm = Realm
              { rname :: String
-             , slug :: String
-             , connectedRealms :: [String]} deriving (Eq, Show)
+             , slug :: Slug
+             , locale :: Locale
+             , connectedRealms :: [Slug]} deriving (Eq, Show)
 
 
 
@@ -113,9 +157,11 @@ instance FromJSON Item where
         return Item{..}
 
 
+
 instance FromJSON Realm where
     parseJSON = withObject "realm" $ \o -> do          
            rname <- o .: "name"
            slug <- o .: "slug"
+           locale <- o .: "locale"
            connectedRealms <- o .: "connected_realms"
            return Realm{..}

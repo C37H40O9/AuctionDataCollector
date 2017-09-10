@@ -127,7 +127,7 @@ collect  = foldl' (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b
 
 
 takeRealms :: ApiKey -> MVar Int -> MVar (S.Seq ReqParams) -> C.Manager -> TChan(DLParams AucFile Realm) -> IO ()
-takeRealms k c rq m ch = do    
+takeRealms k c rq m ch = do
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> k    
     bs<-runResourceT $ do               
                response <- C.httpLbs (setRequestIgnoreStatus req) m                                       
@@ -147,7 +147,7 @@ filterRealms (x:xs) = x : t
 
 
 takeAuctionInfo :: ApiKey -> MVar Int -> MVar (S.Seq ReqParams ) -> C.Manager -> TChan (DLParams AucFile Realm)  -> Realm -> IO () -- request realm auction info from bnet api
-takeAuctionInfo k c rq m ch r = do 
+takeAuctionInfo k c rq m ch r = do
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/auction/data/" <> slug r <> "?locale=en_GB&apikey=" <> k
     aj<-runResourceT $ do            
             response <- C.httpLbs  (setRequestIgnoreStatus req) m
@@ -221,7 +221,7 @@ runJob c rq = do
 
 oneSecond = 1000000 :: Int
 
-isActual :: MVar (M.Map String UTCTime) -> String -> UTCTime  -> IO Bool
+isActual :: MVar (M.Map Slug UTCTime) -> Slug -> UTCTime  -> IO Bool
 isActual m s t = do
     m' <- readMVar m
     let v = M.lookup s m'
@@ -229,13 +229,13 @@ isActual m s t = do
         Nothing -> return False
         Just x -> return $ x >= t
 
-changeUpdTime :: MVar (M.Map String UTCTime) -> String -> UTCTime  -> IO ()
+changeUpdTime :: MVar (M.Map Slug UTCTime) -> Slug -> UTCTime  -> IO ()
 changeUpdTime u s t = do
     u' <- takeMVar u
     putMVar u $ M.insert s t u'
 
 
-updAucJson :: C.Manager -> TChan (DLParams AucFile Realm) -> MVar (M.Map String UTCTime) -> IO ()
+updAucJson :: C.Manager -> TChan (DLParams AucFile Realm) -> MVar (M.Map Slug UTCTime) -> IO ()
 updAucJson m ch u =  do
     DLAucJson a r <- atomically $ readTChan ch
     let t = millisToUTC $ lastModified a 
@@ -251,7 +251,7 @@ updAucJson m ch u =  do
 
 
 myfun :: IO ()
-myfun = do
+myfun = do    
     conf <- load [Required "./config.cfg"]
     let subconf = subconfig "database" conf
     dbuser <- require subconf "username"
@@ -271,7 +271,7 @@ myfun = do
     reqQueue <- newMVar S.empty :: IO (MVar (S.Seq ReqParams ))
     downloadChan <- atomically newTChan :: IO (TChan (DLParams AucFile Realm))
     counter <- newMVar 99 :: IO (MVar Int)
-    updatedAt <- newMVar M.empty :: IO (MVar (M.Map String UTCTime))    
+    updatedAt <- newMVar M.empty :: IO (MVar (M.Map Slug UTCTime))    
     manager <- C.newManager C.tlsManagerSettings
     forkIO $ forever $ updAucJson manager downloadChan updatedAt
     forkIO $ forever $ do 

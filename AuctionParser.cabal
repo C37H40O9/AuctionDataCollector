@@ -37,6 +37,8 @@ library
                       ,postgresql-simple
                       ,postgresql-simple-migration
                       ,configurator
+                      ,invertible-syntax
+                      ,unordered-containers
                       
   default-language:    Haskell2010
 
