@@ -136,15 +136,18 @@ takeRealms k c rq m ch = do
     let rr =  parseRealms bs    
     case rr of 
         Nothing -> return ()
-        Just x -> addReqsToQ rq $ S.fromList $ map (ReqAuc k c rq m ch ) $ filterRealms x
+        Just x -> addReqsToQ rq $ S.fromList $ map (ReqAuc k c rq m ch ) $ filterRealmsByLocale [RU_RU] $ filterSameRealms x
     
 
 
-filterRealms :: [Realm] -> [Realm]
-filterRealms [] = []
-filterRealms (x:xs) = x : t
-    where t = filterRealms $ filter (\y -> slug x `notElem` connectedRealms y ) xs
+filterSameRealms :: [Realm] -> [Realm]
+filterSameRealms [] = []
+filterSameRealms (x:xs) = x : t
+    where t = filterSameRealms $ filter (\y -> slug x `notElem` connectedRealms y ) xs
 
+filterRealmsByLocale :: [Locale] -> [Realm] -> [Realm]
+filterRealmsByLocale _ [] = []
+filterRealmsByLocale ls rs = filter (\y -> locale y `notElem` ls) rs
 
 takeAuctionInfo :: ApiKey -> MVar Int -> MVar (S.Seq ReqParams ) -> C.Manager -> TChan (DLParams AucFile Realm)  -> Realm -> IO () -- request realm auction info from bnet api
 takeAuctionInfo k c rq m ch r = do
