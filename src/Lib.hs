@@ -147,7 +147,7 @@ filterSameRealms (x:xs) = x : t
 
 filterRealmsByLocale :: [Locale] -> [Realm] -> [Realm]
 filterRealmsByLocale _ [] = []
-filterRealmsByLocale ls rs = filter (\y -> locale y `notElem` ls) rs
+filterRealmsByLocale ls rs = filter (\y -> locale y `elem` ls) rs
 
 takeAuctionInfo :: ApiKey -> MVar Int -> MVar (S.Seq ReqParams ) -> C.Manager -> TChan (DLParams AucFile Realm)  -> Realm -> IO () -- request realm auction info from bnet api
 takeAuctionInfo k c rq m ch r = do
