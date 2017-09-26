@@ -58,7 +58,7 @@ parseToBox [i, a, b, c, d, e, f, g] = WBox i a b c d e f g
 
 seqToBox :: S.Seq Int -> Maybe WBox
 seqToBox s = if S.null s then Nothing
-            else Just $ parseToBox  $ l : ws 
+            else Just $ parseToBox  $ l : ws
                    where 
                         l = S.length s - 1
                         s' = S.sort s
@@ -111,12 +111,12 @@ parseRealms x = parseMaybe realmsParser =<< decode x
 
 aucToIStats :: Auction -> IStats
 aucToIStats a = IStats { bid'    = S.replicate (quantity a) (quot  (bid a)    (quantity a))
-                       , buyout' = if buyout a > 0 then S.replicate (quantity a) (quot  (buyout a) (quantity a))  else S.empty              
+                       , buyout' = if buyout a > 0 then S.replicate (quantity a) (quot  (buyout a) (quantity a))  else S.empty
                        }
 
 statsConcat :: IStats -> IStats -> IStats
-statsConcat  s1 s2 = IStats bi bu 
-    where bi = bid'    s1 S.>< bid' s2 
+statsConcat  s1 s2 = IStats bi bu
+    where bi = bid'    s1 S.>< bid' s2
           bu = buyout' s1 S.>< buyout' s2
           
 
@@ -128,12 +128,12 @@ collect  = foldl' (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b
 
 takeRealms :: ApiKey -> MVar Int -> MVar (S.Seq ReqParams) -> C.Manager -> TChan DLParams -> IO ()
 takeRealms k c rq m ch = do
-    req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> k    
+    req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> k
     bs<-runResourceT $ do               
-               response <- C.httpLbs (setRequestIgnoreStatus req) m                                       
+               response <- C.httpLbs (setRequestIgnoreStatus req) m
                return $  C.responseBody response
     incrCounter c
-    let rr =  parseRealms bs    
+    let rr =  parseRealms bs
     case rr of 
         Nothing -> return ()
         Just x -> addReqsToQ rq $ S.fromList $ map (ReqAuc k c rq m ch ) $ filterRealmsByLocale [RU_RU] $ filterSameRealms x
@@ -154,8 +154,8 @@ takeAuctionInfo k c rq m ch r = do
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/auction/data/" <> slug r <> "?locale=en_GB&apikey=" <> k
     aj<-runResourceT $ do            
             response <- C.httpLbs  (setRequestIgnoreStatus req) m
-            return $ C.responseBody response  
-    incrCounter c  
+            return $ C.responseBody response
+    incrCounter c
     let af = parseAucFile aj
     case af of
         Nothing -> return ()
@@ -172,19 +172,19 @@ harvestAuctionJson m ti a r = do
     aj<-runResourceT $ do 
             response <- C.httpLbs (setRequestIgnoreStatus req) m
             return $ C.responseBody response
-    let as = parseAuctions aj    
+    let as = parseAuctions aj
     case as of
         Nothing -> return ()
-        Just x -> print $  M.map seqStatsToWBoxed $ collect $ filter (\x -> itemId x `elem` ti) x 
+        Just x -> print $  M.map seqStatsToWBoxed $ collect $ filter (\x -> itemId x `elem` ti) x
     
 
 
 
 
 addReqToQ :: MVar (S.Seq ReqParams ) -> ReqParams  -> IO ()
-addReqToQ rq reqParam = do 
-    rq' <- takeMVar rq 
-    putMVar rq $ rq' S.|> reqParam 
+addReqToQ rq reqParam = do
+    rq' <- takeMVar rq
+    putMVar rq $ rq' S.|> reqParam
 
 addReqsToQ :: MVar (S.Seq ReqParams ) -> S.Seq ReqParams  -> IO ()
 addReqsToQ rq reqParams = do
@@ -193,7 +193,7 @@ addReqsToQ rq reqParams = do
 
 
 incrCounter :: MVar Int -> IO ()
-incrCounter counter = do 
+incrCounter counter = do
     c <- takeMVar counter
     putMVar counter $ c + 1
 
@@ -201,24 +201,24 @@ millisToUTC :: Integer -> UTCTime
 millisToUTC t = posixSecondsToUTCTime $ fromInteger t / 1000
 
 runRequest :: ReqParams  -> IO()
-runRequest rp = case rp of 
+runRequest rp = case rp of
     ReqAuc k c rq m ch r    -> takeAuctionInfo k c rq m ch r
     ReqRealms k c rq m ch   -> takeRealms k c rq m ch
 
 
 runJob :: MVar Int -> MVar (S.Seq ReqParams ) -> IO ()
-runJob c rq = do 
-    c' <- takeMVar c 
+runJob c rq = do
+    c' <- takeMVar c
     rq' <- takeMVar rq
     let rqlen = S.length rq'
-    if rqlen >= c' 
-        then do 
+    if rqlen >= c'
+        then do
             putMVar c 0
             let (r,t) = S.splitAt c' rq'
             putMVar rq t
             mapConcurrently_ runRequest r --mapM_ (forkIO . runRequest) r 
-        else do 
-            putMVar c (c' - rqlen)            
+        else do
+            putMVar c (c' - rqlen)
             putMVar rq S.empty
             mapConcurrently_ runRequest rq' --mapM_ (forkIO . runRequest) rq'
 
@@ -242,19 +242,18 @@ updAucJson :: C.Manager -> TChan DLParams -> MVar (M.Map Slug UTCTime) -> IO ()
 updAucJson m ch u =  do
     DLAucJson a r <- atomically $ readTChan ch
     let t = millisToUTC $ lastModified a 
-        s = slug r 
-    b <- isActual u s t 
-    unless b $ do 
+        s = slug r
+    b <- isActual u s t
+    unless b $ do
         ti <- trackingItems
         harvestAuctionJson m ti a r
         changeUpdTime u s t
-    
-        
+
 
 
 
 myfun :: IO ()
-myfun = do    
+myfun = do
     conf <- load [Required "./config.cfg"]
     let subconf = subconfig "database" conf
     dbuser <- require subconf "username"
@@ -274,14 +273,13 @@ myfun = do
     reqQueue <- newMVar S.empty :: IO (MVar (S.Seq ReqParams ))
     downloadChan <- atomically newTChan :: IO (TChan DLParams )
     counter <- newMVar 99 :: IO (MVar Int)
-    updatedAt <- newMVar M.empty :: IO (MVar (M.Map Slug UTCTime))    
+    updatedAt <- newMVar M.empty :: IO (MVar (M.Map Slug UTCTime))
     manager <- C.newManager C.tlsManagerSettings
     forkIO $ forever $ updAucJson manager downloadChan updatedAt
     forkIO $ forever $ do 
         addReqToQ reqQueue (ReqRealms apikey counter reqQueue manager downloadChan)
         threadDelay $ 120 * oneSecond
-    forever $ do                               
-                forkIO $ runJob counter reqQueue                
-                threadDelay oneSecond                
+    forever $ do
+                forkIO $ runJob counter reqQueue
+                threadDelay oneSecond
                 return ()
-

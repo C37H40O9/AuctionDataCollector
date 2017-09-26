@@ -126,7 +126,7 @@ data ReqParams = ReqAuc     ApiKey (MVar Int) (MVar (S.Seq ReqParams  )) C.Manag
 
 data DLParams = DLAucJson AucFile Realm
 
-instance FromJSON AucFile where 
+instance FromJSON AucFile where
     parseJSON = withObject "file" $ \o -> do 
         url <- o .: "url"
         lastModified <- o .: "lastModified"
@@ -159,7 +159,7 @@ instance FromJSON Item where
 
 
 instance FromJSON Realm where
-    parseJSON = withObject "realm" $ \o -> do          
+    parseJSON = withObject "realm" $ \o -> do
            rname <- o .: "name"
            slug <- o .: "slug"
            locale <- o .: "locale"
