@@ -83,7 +83,7 @@ data Locale = DE_DE
             | ES_ES
             | FR_FR
             | IT_IT
-            | PT_BR
+            | PT_PT
             | RU_RU deriving (Eq, Ord)
 
 
@@ -93,7 +93,7 @@ pLocale =  pure DE_DE <* text "de_DE"
        <|> pure ES_ES <* text "es_ES"
        <|> pure FR_FR <* text "fr_FR"
        <|> pure IT_IT <* text "it_IT"
-       <|> pure PT_BR <* text "pt_BR"
+       <|> pure PT_PT <* text "pt_PT"
        <|> pure RU_RU <* text "ru_RU"
     
 runParser (Parser p) = p
