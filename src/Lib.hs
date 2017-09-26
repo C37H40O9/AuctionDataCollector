@@ -126,7 +126,7 @@ collect ::  [Auction] -> M.Map Int IStats
 collect  = foldl' (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b ) M.empty 
 
 
-takeRealms :: ApiKey -> MVar Int -> MVar (S.Seq ReqParams) -> C.Manager -> TChan(DLParams AucFile Realm) -> IO ()
+takeRealms :: ApiKey -> MVar Int -> MVar (S.Seq ReqParams) -> C.Manager -> TChan DLParams -> IO ()
 takeRealms k c rq m ch = do
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> k    
     bs<-runResourceT $ do               
@@ -149,7 +149,7 @@ filterRealmsByLocale :: [Locale] -> [Realm] -> [Realm]
 filterRealmsByLocale _ [] = []
 filterRealmsByLocale ls rs = filter (\y -> locale y `elem` ls) rs
 
-takeAuctionInfo :: ApiKey -> MVar Int -> MVar (S.Seq ReqParams ) -> C.Manager -> TChan (DLParams AucFile Realm)  -> Realm -> IO () -- request realm auction info from bnet api
+takeAuctionInfo :: ApiKey -> MVar Int -> MVar (S.Seq ReqParams ) -> C.Manager -> TChan DLParams -> Realm -> IO () -- request realm auction info from bnet api
 takeAuctionInfo k c rq m ch r = do
     req <- C.parseRequest $  "https://eu.api.battle.net/wow/auction/data/" <> slug r <> "?locale=en_GB&apikey=" <> k
     aj<-runResourceT $ do            
@@ -238,7 +238,7 @@ changeUpdTime u s t = do
     putMVar u $ M.insert s t u'
 
 
-updAucJson :: C.Manager -> TChan (DLParams AucFile Realm) -> MVar (M.Map Slug UTCTime) -> IO ()
+updAucJson :: C.Manager -> TChan DLParams -> MVar (M.Map Slug UTCTime) -> IO ()
 updAucJson m ch u =  do
     DLAucJson a r <- atomically $ readTChan ch
     let t = millisToUTC $ lastModified a 
@@ -272,7 +272,7 @@ myfun = do
     conn <- connect connInfo
     initMigrations conn
     reqQueue <- newMVar S.empty :: IO (MVar (S.Seq ReqParams ))
-    downloadChan <- atomically newTChan :: IO (TChan (DLParams AucFile Realm))
+    downloadChan <- atomically newTChan :: IO (TChan DLParams )
     counter <- newMVar 99 :: IO (MVar Int)
     updatedAt <- newMVar M.empty :: IO (MVar (M.Map Slug UTCTime))    
     manager <- C.newManager C.tlsManagerSettings

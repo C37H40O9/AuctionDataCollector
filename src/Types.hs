@@ -120,11 +120,11 @@ data AucFile = AucFile { url          :: String
                        , lastModified :: Integer} deriving (Eq, Show)
 
 -- counter requestQueue manager realm aucfile 
-data ReqParams = ReqAuc     ApiKey (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager  (TChan (DLParams AucFile Realm)) Realm 
-               | ReqRealms  ApiKey (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager (TChan (DLParams AucFile Realm))
+data ReqParams = ReqAuc     ApiKey (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager  (TChan DLParams ) Realm 
+               | ReqRealms  ApiKey (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager (TChan DLParams )
                -- | ReqAucJson (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager AucFile Realm
 
-data DLParams a r = DLAucJson AucFile Realm
+data DLParams = DLAucJson AucFile Realm
 
 instance FromJSON AucFile where 
     parseJSON = withObject "file" $ \o -> do 
