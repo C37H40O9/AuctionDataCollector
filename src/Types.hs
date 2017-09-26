@@ -84,7 +84,7 @@ data Locale = DE_DE
             | FR_FR
             | IT_IT
             | PT_BR
-            | RU_RU deriving (Eq, Ord, Generic)
+            | RU_RU deriving (Eq, Ord)
 
 
 pLocale :: Syntax f => f Locale
@@ -117,7 +117,7 @@ data Realm = Realm
 
 
 data AucFile = AucFile { url          :: String
-                       , lastModified :: Integer} deriving (Eq, Show, Generic)
+                       , lastModified :: Integer} deriving (Eq, Show)
 
 -- counter requestQueue manager realm aucfile 
 data ReqParams = ReqAuc     ApiKey (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager  (TChan (DLParams AucFile Realm)) Realm 
