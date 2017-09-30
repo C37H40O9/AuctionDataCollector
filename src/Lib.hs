@@ -262,6 +262,9 @@ myfun = do
     dbhost <- require subconf "host"
     dbport <- require subconf "port"
     apikey <- require conf "api.key" :: IO ApiKey
+    region <- (\s -> read s :: Region) <$> require conf "api.region"
+    langLocale <- (\s -> read s :: Locale) <$> require conf "api.langLocale"
+    filterLocale <- (\s -> read s :: [Locale]) <$> require conf "api.filterLocale"
     let connInfo = ConnectInfo { connectHost = dbhost
                                , connectPort = dbport
                                , connectUser = dbuser
