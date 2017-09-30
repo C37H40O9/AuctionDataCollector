@@ -84,7 +84,12 @@ data Locale = DE_DE
             | FR_FR
             | IT_IT
             | PT_PT
-            | RU_RU deriving (Eq, Ord)
+            | RU_RU
+            | KO_KR
+            | ZH_TW
+            | EN_US
+            | PT_BR
+            | ES_MX deriving (Eq, Ord)
 
 
 pLocale :: Syntax f => f Locale
@@ -95,6 +100,11 @@ pLocale =  pure DE_DE <* text "de_DE"
        <|> pure IT_IT <* text "it_IT"
        <|> pure PT_PT <* text "pt_PT"
        <|> pure RU_RU <* text "ru_RU"
+       <|> pure KO_KR <* text "ko_KR"
+       <|> pure ZH_TW <* text "zh_TW"
+       <|> pure EN_US <* text "en_US"
+       <|> pure PT_BR <* text "pt_BR"
+       <|> pure ES_MX <* text "es_MX"
     
 runParser (Parser p) = p
 
