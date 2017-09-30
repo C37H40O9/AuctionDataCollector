@@ -131,18 +131,19 @@ data Realm = Realm
 data AucFile = AucFile { url          :: String
                        , lastModified :: Integer} deriving (Eq, Show)
 
-data Config = Cfg { apiKey :: ApiKey
-                  , region :: Region
-                  , langLocale :: Locale
-                  , filterLocale :: [Locale]
-                  , counter :: MVar Int
-                  , reqQueue :: MVar (S.Seq ReqParams)
-                  , manager :: C.Manager
-                  , dlChan :: TChan DLParams
-                  }
+data Config = Config { apiKey :: ApiKey
+                     , region :: Region
+                     , langLocale :: Locale
+                     , filterLocale :: [Locale]
+                     , counter :: MVar Int
+                     , reqQueue :: MVar (S.Seq ReqParams)
+                     , manager :: C.Manager
+                     , dlChan :: TChan DLParams
+                     , updatedAt :: MVar (M.Map Slug UTCTime)
+                     }
 -- counter requestQueue manager realm aucfile 
-data ReqParams = ReqAuc     ApiKey (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager  (TChan DLParams ) Realm 
-               | ReqRealms  ApiKey (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager (TChan DLParams )
+data ReqParams = ReqAuc     Config Realm 
+               | ReqRealms  Config
                -- | ReqAucJson (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager AucFile Realm
 
 data DLParams = DLAucJson AucFile Realm

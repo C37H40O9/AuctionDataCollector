@@ -4,6 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE NamedFieldPuns #-}
 --{-# LANGUAGE TransformListComp #-}
 --{-# LANGUAGE OverloadedRecordFields #-}
 
@@ -126,17 +127,17 @@ collect ::  [Auction] -> M.Map Int IStats
 collect  = foldl' (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b ) M.empty 
 
 
-takeRealms :: ApiKey -> MVar Int -> MVar (S.Seq ReqParams) -> C.Manager -> TChan DLParams -> IO ()
-takeRealms k c rq m ch = do
-    req <- C.parseRequest $  "https://eu.api.battle.net/wow/realm/status?locale=en_GB&apikey=" <> k
+takeRealms :: Config -> IO ()-- ApiKey -> MVar Int -> MVar (S.Seq ReqParams) -> C.Manager -> TChan DLParams -> IO ()
+takeRealms cfg = do
+    req <- C.parseRequest $  "https://" <> show (region cfg) <> ".api.battle.net/wow/realm/status?locale=" <> show (langLocale cfg) <> "&apikey=" <> apiKey cfg
     bs<-runResourceT $ do               
-               response <- C.httpLbs (setRequestIgnoreStatus req) m
+               response <- C.httpLbs (setRequestIgnoreStatus req) $ manager cfg
                return $  C.responseBody response
-    incrCounter c
+    incrCounter $ counter cfg
     let rr =  parseRealms bs
     case rr of 
         Nothing -> return ()
-        Just x -> addReqsToQ rq $ S.fromList $ map (ReqAuc k c rq m ch ) $ filterRealmsByLocale [RU_RU] $ filterSameRealms x
+        Just x -> addReqsToQ cfg $ S.fromList $ map (ReqAuc cfg ) $ filterRealmsByLocale (filterLocale cfg) $ filterSameRealms x
     
 
 
@@ -149,17 +150,17 @@ filterRealmsByLocale :: [Locale] -> [Realm] -> [Realm]
 filterRealmsByLocale _ [] = []
 filterRealmsByLocale ls rs = filter (\y -> locale y `elem` ls) rs
 
-takeAuctionInfo :: ApiKey -> MVar Int -> MVar (S.Seq ReqParams ) -> C.Manager -> TChan DLParams -> Realm -> IO () -- request realm auction info from bnet api
-takeAuctionInfo k c rq m ch r = do
-    req <- C.parseRequest $  "https://eu.api.battle.net/wow/auction/data/" <> slug r <> "?locale=en_GB&apikey=" <> k
+takeAuctionInfo :: Config -> Realm -> IO ()--ApiKey -> MVar Int -> MVar (S.Seq ReqParams ) -> C.Manager -> TChan DLParams -> Realm -> IO ()
+takeAuctionInfo cfg r = do
+    req <- C.parseRequest $  "https://" <> show (region cfg) <> ".api.battle.net/wow/auction/data/" <> slug r <> "?locale=" <> show (langLocale cfg) <> "&apikey=" <> apiKey cfg
     aj<-runResourceT $ do            
-            response <- C.httpLbs  (setRequestIgnoreStatus req) m
+            response <- C.httpLbs  (setRequestIgnoreStatus req) $ manager cfg
             return $ C.responseBody response
-    incrCounter c
+    incrCounter $ counter cfg
     let af = parseAucFile aj
     case af of
         Nothing -> return ()
-        Just x ->  atomically $ writeTChan ch (DLAucJson x r)
+        Just x ->  atomically $ writeTChan (dlChan cfg) (DLAucJson x r)
     
 
 
@@ -167,7 +168,7 @@ harvestAuctionJson :: C.Manager -> TrackingItems -> AucFile -> Realm ->  IO ()
 
 harvestAuctionJson m ti a r = do
     req <- C.parseRequest $ url a
-    putStrLn $ slug r <> " @ " <> show (millisToUTC $ lastModified a)
+    putStrLn $ rname r <> " @ " <> show (millisToUTC $ lastModified a)
     
     aj<-runResourceT $ do 
             response <- C.httpLbs (setRequestIgnoreStatus req) m
@@ -181,15 +182,15 @@ harvestAuctionJson m ti a r = do
 
 
 
-addReqToQ :: MVar (S.Seq ReqParams ) -> ReqParams  -> IO ()
-addReqToQ rq reqParam = do
-    rq' <- takeMVar rq
-    putMVar rq $ rq' S.|> reqParam
+addReqToQ :: Config -> ReqParams -> IO ()-- MVar (S.Seq ReqParams ) -> ReqParams  -> IO ()
+addReqToQ cfg reqParam = do --rq reqParam = do
+    rq' <- takeMVar (reqQueue cfg)
+    putMVar (reqQueue cfg) $ rq' S.|> reqParam
 
-addReqsToQ :: MVar (S.Seq ReqParams ) -> S.Seq ReqParams  -> IO ()
-addReqsToQ rq reqParams = do
-    rq' <- takeMVar rq
-    putMVar rq $ rq' S.>< reqParams
+addReqsToQ :: Config -> S.Seq ReqParams  -> IO ()
+addReqsToQ cfg reqParams = do
+    rq' <- takeMVar (reqQueue cfg)
+    putMVar (reqQueue cfg) $ rq' S.>< reqParams
 
 
 incrCounter :: MVar Int -> IO ()
@@ -202,25 +203,25 @@ millisToUTC t = posixSecondsToUTCTime $ fromInteger t / 1000
 
 runRequest :: ReqParams  -> IO()
 runRequest rp = case rp of
-    ReqAuc k c rq m ch r    -> takeAuctionInfo k c rq m ch r
-    ReqRealms k c rq m ch   -> takeRealms k c rq m ch
+    ReqAuc cfg r    -> takeAuctionInfo cfg r
+    ReqRealms cfg   -> takeRealms cfg
 
 
-runJob :: MVar Int -> MVar (S.Seq ReqParams ) -> IO ()
-runJob c rq = do
-    c' <- takeMVar c
-    rq' <- takeMVar rq
+runJob :: Config -> IO ()-- MVar Int -> MVar (S.Seq ReqParams ) -> IO ()
+runJob cfg = do -- c rq = do
+    c' <- takeMVar (counter cfg)
+    rq' <- takeMVar (reqQueue cfg)
     let rqlen = S.length rq'
     if rqlen >= c'
         then do
-            putMVar c 0
+            putMVar (counter cfg) 0
             let (r,t) = S.splitAt c' rq'
-            putMVar rq t
-            mapConcurrently_ runRequest r --mapM_ (forkIO . runRequest) r 
+            putMVar (reqQueue cfg) t
+            mapConcurrently_ runRequest r 
         else do
-            putMVar c (c' - rqlen)
-            putMVar rq S.empty
-            mapConcurrently_ runRequest rq' --mapM_ (forkIO . runRequest) rq'
+            putMVar (counter cfg) (c' - rqlen)
+            putMVar (reqQueue cfg) S.empty
+            mapConcurrently_ runRequest rq' 
 
 oneSecond = 1000000 :: Int
 
@@ -238,16 +239,16 @@ changeUpdTime u s t = do
     putMVar u $ M.insert s t u'
 
 
-updAucJson :: C.Manager -> TChan DLParams -> MVar (M.Map Slug UTCTime) -> IO ()
-updAucJson m ch u =  do
-    DLAucJson a r <- atomically $ readTChan ch
+updAucJson ::  Config -> IO () --C.Manager -> TChan DLParams -> MVar (M.Map Slug UTCTime) -> IO ()
+updAucJson cfg = do --m ch u =  do
+    DLAucJson a r <- atomically $ readTChan (dlChan cfg)
     let t = millisToUTC $ lastModified a 
         s = slug r
-    b <- isActual u s t
+    b <- isActual (updatedAt cfg) s t
     unless b $ do
         ti <- trackingItems
-        harvestAuctionJson m ti a r
-        changeUpdTime u s t
+        harvestAuctionJson (manager cfg) ti a r
+        changeUpdTime (updatedAt cfg) s t
 
 
 
@@ -255,34 +256,47 @@ updAucJson m ch u =  do
 myfun :: IO ()
 myfun = do
     conf <- load [Required "./config.cfg"]
-    let subconf = subconfig "database" conf
-    dbuser <- require subconf "username"
-    dbpass <- require subconf "password"
-    dbname <- require subconf "database"
-    dbhost <- require subconf "host"
-    dbport <- require subconf "port"
-    apikey <- require conf "api.key" :: IO ApiKey
-    region <- (\s -> read s :: Region) <$> require conf "api.region"
-    langLocale <- (\s -> read s :: Locale) <$> require conf "api.langLocale"
-    filterLocale <- (\s -> read s :: [Locale]) <$> require conf "api.filterLocale"
-    let connInfo = ConnectInfo { connectHost = dbhost
-                               , connectPort = dbport
-                               , connectUser = dbuser
-                               , connectPassword = dbpass
-                               , connectDatabase = dbname
-                               }
-    conn <- connect connInfo
-    initMigrations conn
-    reqQueue <- newMVar S.empty :: IO (MVar (S.Seq ReqParams ))
-    downloadChan <- atomically newTChan :: IO (TChan DLParams )
-    counter <- newMVar 99 :: IO (MVar Int)
+    let dbconf = subconfig "database" conf
+    let apiconf = subconfig "api" conf
+    connectUser <- require dbconf "username"
+    connectPassword <- require dbconf "password"
+    connectDatabase <- require dbconf "database"
+    connectHost <- require dbconf "host"
+    connectPort <- require dbconf "port"
+    apiKey <- require apiconf "key" :: IO ApiKey
+    apiLimit <- require apiconf "limit"
+    region <- (\s -> read s :: Region) <$> require apiconf "region"
+    langLocale <- (\s -> read s :: Locale) <$> require apiconf "langLocale"
+    filterLocale' <-  require apiconf "filterLocale"
+    let filterLocale = (\s -> read s :: Locale) <$> filterLocale'
+    reqQueue <- newMVar S.empty :: IO (MVar (S.Seq ReqParams))
+    dlChan <- atomically newTChan :: IO (TChan DLParams)
+    counter <- newMVar apiLimit :: IO (MVar Int)
     updatedAt <- newMVar M.empty :: IO (MVar (M.Map Slug UTCTime))
     manager <- C.newManager C.tlsManagerSettings
-    forkIO $ forever $ updAucJson manager downloadChan updatedAt
+    let connInfo = ConnectInfo { connectHost
+                               , connectPort
+                               , connectUser
+                               , connectPassword
+                               , connectDatabase
+                               }
+    let cfg = Config { apiKey
+                     , region
+                     , langLocale
+                     , filterLocale
+                     , counter
+                     , reqQueue
+                     , manager
+                     , dlChan
+                     , updatedAt
+                     }
+    conn <- connect connInfo
+    initMigrations conn
+    forkIO $ forever $ updAucJson cfg
     forkIO $ forever $ do 
-        addReqToQ reqQueue (ReqRealms apikey counter reqQueue manager downloadChan)
+        addReqToQ cfg (ReqRealms cfg)
         threadDelay $ 120 * oneSecond
     forever $ do
-                forkIO $ runJob counter reqQueue
+                forkIO $ runJob cfg
                 threadDelay oneSecond
                 return ()
