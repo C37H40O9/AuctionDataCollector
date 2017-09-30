@@ -78,6 +78,8 @@ data Profession = Alchemy
 
 type Slug = String
 
+data Region = EU | KR | TW | US deriving (Eq, Ord, Show, Read)
+
 data Locale = DE_DE
             | EN_GB
             | ES_ES
