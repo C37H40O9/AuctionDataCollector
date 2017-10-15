@@ -58,14 +58,15 @@ parseToBox [i, a, b, c, d, e, f, g] = WBox i a b c d e f g
 
 
 seqToBox :: S.Seq Int -> Maybe WBox
-seqToBox s = if S.null s then Nothing
-            else Just $ parseToBox  $ l : ws
-                   where 
-                        l = S.length s - 1
-                        s' = S.sort s
-                        ix :: [Int]
-                        ix = quot . (*l) <$> [0,9,25,50,75,91,100] <*> pure 100
-                        ws = S.index s' <$> ix
+seqToBox s | S.null s = Nothing
+           | otherwise = Just $ parseToBox  $ l : ws
+                where
+                    l = S.length s
+                    maxIndex = l - 1
+                    s' = S.sort s
+                    ix :: [Int]
+                    ix = quot . (* maxIndex) <$> [0,9,25,50,75,91,100] <*> pure 100
+                    ws = S.index s' <$> ix
                    
 seqStatsToWBoxed :: IStats -> WBoxedStats
 seqStatsToWBoxed s = BoxedStats (seqToBox $ bid' s) (seqToBox $ buyout' s)
