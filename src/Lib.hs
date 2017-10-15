@@ -265,10 +265,9 @@ myfun = do
     connectPort <- require dbconf "port"
     apiKey <- require apiconf "key" :: IO ApiKey
     apiLimit <- require apiconf "limit"
-    region <- (\s -> read s :: Region) <$> require apiconf "region"
-    langLocale <- (\s -> read s :: Locale) <$> require apiconf "langLocale"
-    filterLocale' <-  require apiconf "filterLocale"
-    let filterLocale = (\s -> read s :: Locale) <$> filterLocale'
+    region <- read <$> require apiconf "region" :: IO Region
+    langLocale <- read <$> require apiconf "langLocale" :: IO Locale
+    filterLocale <- fmap read <$> require apiconf "filterLocale" :: IO [Locale]
     reqQueue <- newMVar S.empty :: IO (MVar (S.Seq ReqParams))
     dlChan <- atomically newTChan :: IO (TChan DLParams)
     counter <- newMVar apiLimit :: IO (MVar Int)
