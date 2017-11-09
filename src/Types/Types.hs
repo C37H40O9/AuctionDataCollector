@@ -1,30 +1,36 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE DeriveAnyClass #-}
 
-module Types
+module Types.Types ( WBox(..)
+                   , Item(..)
+                   , Auction(..)
+                   , IStats(..)
+                   , WBoxedStats(..)
+                   , ItemS(..)
+                   , ApiKey
+                   , TrackingItems
+                   , Profession(..)
+                   , Slug
+                   , Region(..)
+                   , Realm(..)
+                   , AucFile(..)
+                   , Config(..)
+                   , ReqParams(..)
+                   , DLParams(..)
+                   )
         where
+import Types.Locale
 import qualified Data.Sequence as S
-import GHC.Generics
 import Data.Aeson
 import qualified Network.HTTP.Conduit as C
 import Control.Concurrent.MVar
 import Control.Concurrent.STM.TChan
 import Data.Time.Clock
 import qualified Data.Map.Strict as M
-import Prelude hiding (Applicative(..), print)
-import Data.Maybe (fromJust)
-import Text.Syntax
-import Text.Syntax.Parser.Naive
-import Text.Syntax.Printer.Naive
-import qualified Data.HashMap.Lazy as HML        ( lookup )
-import qualified Data.Text.Lazy as TL
-import qualified Control.Applicative as CA                      ( empty, pure )
-import qualified Data.Aeson.Types  as AT                        ( Parser )
-import Data.Text                                 ( pack )
+import Database.PostgreSQL.Simple.ToRow
+import Database.PostgreSQL.Simple.ToField
 
                 -- Type for whiskers box diagram
 data WBox = WBox { ic   :: Int  -- items count
@@ -35,6 +41,9 @@ data WBox = WBox { ic   :: Int  -- items count
                  , p75  :: Int
                  , topW :: Int
                  , maxW :: Int } deriving (Eq, Show)
+
+instance ToRow WBox where
+    toRow b = map toField [ic b, minW b, botW b, p25 b, p50 b, p75 b, topW b, maxW b]
 
 data Item = Item { name :: String
                  , iid :: Int
@@ -80,45 +89,6 @@ type Slug = String
 
 data Region = EU | KR | TW | US deriving (Eq, Ord, Show, Read)
 
-data Locale = DE_DE
-            | EN_GB
-            | ES_ES
-            | FR_FR
-            | IT_IT
-            | PT_PT
-            | RU_RU
-            | KO_KR
-            | ZH_TW
-            | EN_US
-            | PT_BR
-            | ES_MX deriving (Eq, Ord)
-
-
-pLocale :: Syntax f => f Locale
-pLocale =  pure DE_DE <* text "de_DE"
-       <|> pure EN_GB <* text "en_GB"
-       <|> pure ES_ES <* text "es_ES"
-       <|> pure FR_FR <* text "fr_FR"
-       <|> pure IT_IT <* text "it_IT"
-       <|> pure PT_PT <* text "pt_PT"
-       <|> pure RU_RU <* text "ru_RU"
-       <|> pure KO_KR <* text "ko_KR"
-       <|> pure ZH_TW <* text "zh_TW"
-       <|> pure EN_US <* text "en_US"
-       <|> pure PT_BR <* text "pt_BR"
-       <|> pure ES_MX <* text "es_MX"
-    
-runParser (Parser p) = p
-
-instance Read Locale where readsPrec _ = runParser pLocale
-
-instance Show Locale where show = fromJust . print pLocale
-
-instance FromJSON Locale where
-    parseJSON (String t) =  fromString (TL.unpack (TL.fromStrict t))
-        where fromString :: String -> AT.Parser Locale
-              fromString s = CA.pure (read s :: Locale)
-    parseJSON _ = CA.empty
 
 data Realm = Realm
              { rname :: String

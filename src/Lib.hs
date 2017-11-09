@@ -1,16 +1,14 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE NamedFieldPuns #-}
 --{-# LANGUAGE TransformListComp #-}
 --{-# LANGUAGE OverloadedRecordFields #-}
 
 module Lib
      where
-import Types
+import Types.Types
+import Types.Locale
 import DB
 import qualified Data.Map.Strict as M
 import qualified Data.Sequence as S
