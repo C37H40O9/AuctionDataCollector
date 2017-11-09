@@ -43,7 +43,10 @@ data WBox = WBox { ic   :: Int  -- items count
                  , maxW :: Int } deriving (Eq, Show)
 
 instance ToRow WBox where
-    toRow b = map toField [ic b, minW b, botW b, p25 b, p50 b, p75 b, topW b, maxW b]
+    toRow b = map toField $ [ic , minW , botW , p25 , p50 , p75 , topW , maxW ] <*> pure b
+
+instance ToField WBox where
+    toField b = Many $ map toField $ [ic , minW , botW , p25 , p50 , p75 , topW , maxW ] <*> pure b
 
 data Item = Item { name :: String
                  , iid :: Int
