@@ -7,17 +7,13 @@ module DB
     where
 
 import Database.PostgreSQL.Simple
-import Database.PostgreSQL.Simple.ToRow
-import Database.PostgreSQL.Simple.ToField
 import Database.PostgreSQL.Simple.SqlQQ
 import Database.PostgreSQL.Simple.Migration
 import Types.Types
-import Types.Locale
 import Data.Monoid ((<>))
 import Data.Time.Clock.POSIX
 import Data.Time.Clock
 import Data.Time.Format
-import qualified Data.ByteString.Char8 as B
 import Data.Int (Int64)
 
 

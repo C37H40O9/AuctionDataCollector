@@ -28,7 +28,6 @@ import Control.Monad (join, forever, when, unless)
 import Control.Concurrent.MVar
 import Data.Time.Clock.POSIX
 import Data.Time.Clock
-import Data.Time.Format
 import System.Locale
 import Control.Monad.Trans.Class (lift)
 import Control.Concurrent
@@ -164,7 +163,6 @@ takeAuctionInfo cfg r = do
 
 
 harvestAuctionJson :: C.Manager -> TrackingItems -> AucFile -> Realm ->  IO ()
-
 harvestAuctionJson m ti a r = do
     req <- C.parseRequest $ url a
     putStrLn $ rname r <> " @ " <> show (millisToUTC $ lastModified a)
