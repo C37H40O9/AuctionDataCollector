@@ -173,7 +173,7 @@ harvestAuctionJson m ti a r = do
     let as = parseAuctions aj
     case as of
         Nothing -> return ()
-        Just x -> print $  M.map seqStatsToWBoxed $ collect $ filter (\x -> itemId x `elem` ti) x
+        Just x -> print $  M.map seqStatsToWBoxed $ collect $ filter (\y -> itemId y `elem` ti) x
     
 
 
