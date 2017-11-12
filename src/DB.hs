@@ -3,7 +3,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE BangPatterns #-}
 
-module DB 
+module DB (initMigrations, writeBoxInTBid)
     where
 
 import Database.PostgreSQL.Simple
@@ -18,8 +18,8 @@ import Data.Int (Int64)
 
 
 
---millisToUTC :: Integer -> UTCTime
---millisToUTC t = posixSecondsToUTCTime $ fromInteger t / 1000
+millisToUTC :: Integer -> UTCTime
+millisToUTC t = posixSecondsToUTCTime $ fromInteger t / 1000
 
 
 initMigrations :: Connection -> IO ()
@@ -31,7 +31,8 @@ initMigrations conn = do
 
 writeBoxInTBid :: Integer -> Slug -> Int -> WBox -> Connection -> IO Int64
 writeBoxInTBid date slug' iid' box conn = execute conn q qdata
-        where qdata =  (date,  slug' , iid' , box)
+        where qdata =  (date',  slug' , iid' , box)
+              date' = millisToUTC date
               q = "insert into bid (bid_date, server_slug, item_id, item_count, min_w, bot_w, p_25, p_50, p_75, top_w, max_w) values (?,?,?,?,?,?,?,?,?,?,?)"
               
 

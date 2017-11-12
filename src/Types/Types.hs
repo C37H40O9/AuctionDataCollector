@@ -62,9 +62,9 @@ data IStats = IStats { bid' :: S.Seq Int
                      , buyout' :: S.Seq Int
                      } deriving (Eq, Show)
 
-data WBoxedStats = BoxedStats { bbid :: Maybe WBox
-                             , bbuyout :: Maybe WBox
-                             } deriving (Eq, Show)
+data WBoxedStats = WBoxedStats { bbid :: Maybe WBox
+                               , bbuyout :: Maybe WBox
+                               } deriving (Eq, Show)
 
 newtype AuctionS = AuctionS {auctions :: [Auction]} deriving (Eq, Show)
 

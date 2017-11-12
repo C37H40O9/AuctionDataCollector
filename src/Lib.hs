@@ -66,7 +66,7 @@ seqToBox s | S.null s = Nothing
                     ws = S.index s' <$> ix
                    
 seqStatsToWBoxed :: IStats -> WBoxedStats
-seqStatsToWBoxed s = BoxedStats (seqToBox $ bid' s) (seqToBox $ buyout' s)
+seqStatsToWBoxed s = WBoxedStats (seqToBox $ bid' s) (seqToBox $ buyout' s)
 
 itemsFile :: FilePath
 itemsFile = "items.json"
