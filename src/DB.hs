@@ -29,8 +29,8 @@ initMigrations conn = do
         MigrationSuccess -> return ()
         MigrationError reason -> print reason
 
-writeBoxInTBid :: Integer -> Slug -> Int -> WBox -> Connection -> IO Int64
-writeBoxInTBid date slug' iid' box conn = execute conn q qdata
+writeBoxInTBid :: Integer -> Slug -> Int -> Connection -> WBox -> IO Int64
+writeBoxInTBid date slug' iid' conn box = execute conn q qdata
         where qdata =  (date',  slug' , iid' , box)
               date' = millisToUTC date
               q = "insert into bid (bid_date, server_slug, item_id, item_count, min_w, bot_w, p_25, p_50, p_75, top_w, max_w) values (?,?,?,?,?,?,?,?,?,?,?)"

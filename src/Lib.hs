@@ -162,13 +162,13 @@ takeAuctionInfo cfg r = do
     
 
 
-harvestAuctionJson :: C.Manager -> TrackingItems -> AucFile -> Realm ->  IO ()
-harvestAuctionJson m ti a r = do
+harvestAuctionJson :: Config -> TrackingItems -> AucFile -> Realm ->  IO ()
+harvestAuctionJson cfg ti a r = do
     req <- C.parseRequest $ url a
     putStrLn $ rname r <> " @ " <> show (millisToUTC $ lastModified a)
     
     aj<-runResourceT $ do 
-            response <- C.httpLbs (setRequestIgnoreStatus req) m
+            response <- C.httpLbs (setRequestIgnoreStatus req) $ manager cfg
             return $ C.responseBody response
     let as = parseAuctions aj
     case as of
@@ -244,7 +244,7 @@ updAucJson cfg = do --m ch u =  do
     b <- isActual (updatedAt cfg) s t
     unless b $ do
         ti <- trackingItems
-        harvestAuctionJson (manager cfg) ti a r
+        harvestAuctionJson cfg ti a r
         changeUpdTime (updatedAt cfg) s t
 
 
