@@ -15,7 +15,6 @@ import qualified Data.Sequence as S
 import qualified Data.ByteString.Lazy as B
 import Data.Aeson
 import Data.Aeson.Types
---import GHC.Exts (sortWith, groupWith, the)
 import Data.Monoid ((<>))
 import Data.List (foldl')
 import Network.HTTP.Client ( setRequestIgnoreStatus)
@@ -127,7 +126,7 @@ collect ::  [Auction] -> M.Map Int IStats
 collect  = foldl' (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b ) M.empty 
 
 
-takeRealms :: Config -> IO ()-- ApiKey -> MVar Int -> MVar (S.Seq ReqParams) -> C.Manager -> TChan DLParams -> IO ()
+takeRealms :: Config -> IO ()
 takeRealms cfg = do
     req <- C.parseRequest $  "https://" <> show (region cfg) <> ".api.battle.net/wow/realm/status?locale=" <> show (langLocale cfg) <> "&apikey=" <> apiKey cfg
     bs<-runResourceT $ do               
@@ -150,7 +149,7 @@ filterRealmsByLocale :: [Locale] -> [Realm] -> [Realm]
 filterRealmsByLocale _ [] = []
 filterRealmsByLocale ls rs = filter (\y -> locale y `elem` ls) rs
 
-takeAuctionInfo :: Config -> Realm -> IO ()--ApiKey -> MVar Int -> MVar (S.Seq ReqParams ) -> C.Manager -> TChan DLParams -> Realm -> IO ()
+takeAuctionInfo :: Config -> Realm -> IO ()
 takeAuctionInfo cfg r = do
     req <- C.parseRequest $  "https://" <> show (region cfg) <> ".api.battle.net/wow/auction/data/" <> slug r <> "?locale=" <> show (langLocale cfg) <> "&apikey=" <> apiKey cfg
     aj<-runResourceT $ do            
@@ -179,13 +178,10 @@ harvestAuctionJson cfg ti a r = do
         Just x -> do
             i <-  M.traverseWithKey (\k v -> writeBoxInTBid t (slug r) k (fromJust $ bbid v) (connPool cfg) ) $  M.map seqStatsToWBoxed $ collect $ filter (\y -> itemId y `elem` ti) x
             print i
-    
---TODO add connPool
 
 
-
-addReqToQ :: Config -> ReqParams -> IO ()-- MVar (S.Seq ReqParams ) -> ReqParams  -> IO ()
-addReqToQ cfg reqParam = do --rq reqParam = do
+addReqToQ :: Config -> ReqParams -> IO ()
+addReqToQ cfg reqParam = do
     rq' <- takeMVar (reqQueue cfg)
     putMVar (reqQueue cfg) $ rq' S.|> reqParam
 
@@ -209,8 +205,8 @@ runRequest rp = case rp of
     ReqRealms cfg   -> takeRealms cfg
 
 
-runJob :: Config -> IO ()-- MVar Int -> MVar (S.Seq ReqParams ) -> IO ()
-runJob cfg = do -- c rq = do
+runJob :: Config -> IO ()
+runJob cfg = do
     c' <- takeMVar (counter cfg)
     rq' <- takeMVar (reqQueue cfg)
     let rqlen = S.length rq'
@@ -241,8 +237,8 @@ changeUpdTime u s t = do
     putMVar u $ M.insert s t u'
 
 
-updAucJson ::  Config -> IO () --C.Manager -> TChan DLParams -> MVar (M.Map Slug UTCTime) -> IO ()
-updAucJson cfg = do --m ch u =  do
+updAucJson ::  Config -> IO () 
+updAucJson cfg = do
     DLAucJson a r <- atomically $ readTChan (dlChan cfg)
     let t = millisToUTC $ lastModified a 
         s = slug r
