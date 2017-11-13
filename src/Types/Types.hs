@@ -29,24 +29,24 @@ import Control.Concurrent.MVar
 import Control.Concurrent.STM.TChan
 import Data.Time.Clock
 import qualified Data.Map.Strict as M
+import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.ToRow
 import Database.PostgreSQL.Simple.ToField
+import Data.Pool
 
                 -- Type for whiskers box diagram
 data WBox = WBox { ic   :: Int  -- items count
-                 , minW :: Int
                  , botW :: Int
                  , p25  :: Int
                  , p50  :: Int
                  , p75  :: Int
-                 , topW :: Int
-                 , maxW :: Int } deriving (Eq, Show)
+                 , topW :: Int } deriving (Eq, Show)
 
 instance ToRow WBox where
-    toRow b = map toField $ [ic , minW , botW , p25 , p50 , p75 , topW , maxW ] <*> pure b
+    toRow b = map toField $ [ic , botW , p25 , p50 , p75 , topW ] <*> pure b
 
 instance ToField WBox where
-    toField b = Many $ map toField $ [ic , minW , botW , p25 , p50 , p75 , topW , maxW ] <*> pure b
+    toField b = Many $ map toField $ [ic ,botW , p25 , p50 , p75 , topW  ] <*> pure b
 
 data Item = Item { name :: String
                  , iid :: Int
@@ -113,6 +113,7 @@ data Config = Config { apiKey :: ApiKey
                      , manager :: C.Manager
                      , dlChan :: TChan DLParams
                      , updatedAt :: MVar (M.Map Slug UTCTime)
+                     , connPool :: Pool Connection
                      }
 -- counter requestQueue manager realm aucfile 
 data ReqParams = ReqAuc     Config Realm 

@@ -38,6 +38,8 @@ import qualified Control.Monad.Parallel as P
 import Control.Concurrent.Async
 import Data.Configurator
 import Database.PostgreSQL.Simple
+import Data.Pool
+import Data.Maybe (fromJust)
 
 
 
@@ -51,7 +53,7 @@ trackingItems = do
 
 
 parseToBox :: [Int] -> WBox
-parseToBox [i, a, b, c, d, e, f, g] = WBox i a b c d e f g
+parseToBox [i, a, b, c, d, e] = WBox i a b c d e
 
 
 seqToBox :: S.Seq Int -> Maybe WBox
@@ -62,7 +64,7 @@ seqToBox s | S.null s = Nothing
                     maxIndex = l - 1
                     s' = S.sort s
                     ix :: [Int]
-                    ix = quot . (* maxIndex) <$> [0,9,25,50,75,91,100] <*> pure 100
+                    ix = quot . (* maxIndex) <$> [9,25,50,75,91] <*> pure 100
                     ws = S.index s' <$> ix
                    
 seqStatsToWBoxed :: IStats -> WBoxedStats
@@ -165,7 +167,8 @@ takeAuctionInfo cfg r = do
 harvestAuctionJson :: Config -> TrackingItems -> AucFile -> Realm ->  IO ()
 harvestAuctionJson cfg ti a r = do
     req <- C.parseRequest $ url a
-    putStrLn $ rname r <> " @ " <> show (millisToUTC $ lastModified a)
+    let t = millisToUTC $ lastModified a
+    putStrLn $ rname r <> " @ " <> show t
     
     aj<-runResourceT $ do 
             response <- C.httpLbs (setRequestIgnoreStatus req) $ manager cfg
@@ -173,9 +176,11 @@ harvestAuctionJson cfg ti a r = do
     let as = parseAuctions aj
     case as of
         Nothing -> return ()
-        Just x -> print $  M.map seqStatsToWBoxed $ collect $ filter (\y -> itemId y `elem` ti) x
+        Just x -> do
+            i <-  M.traverseWithKey (\k v -> writeBoxInTBid t (slug r) k (fromJust $ bbid v) (connPool cfg) ) $  M.map seqStatsToWBoxed $ collect $ filter (\y -> itemId y `elem` ti) x
+            print i
     
-
+--TODO add connPool
 
 
 
@@ -276,6 +281,7 @@ myfun = do
                                , connectPassword
                                , connectDatabase
                                }
+    connPool <- createPool (connect connInfo) close 1 10 20
     let cfg = Config { apiKey
                      , region
                      , langLocale
@@ -285,9 +291,11 @@ myfun = do
                      , manager
                      , dlChan
                      , updatedAt
+                     , connPool
                      }
-    conn <- connect connInfo
-    initMigrations conn
+    withResource connPool initMigrations
+    --conn <- connect connInfo
+    --initMigrations conn
     forkIO $ forever $ updAucJson cfg
     forkIO $ forever $ do 
         addReqToQ cfg (ReqRealms cfg)

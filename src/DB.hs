@@ -7,6 +7,7 @@ module DB (initMigrations, writeBoxInTBid)
     where
 
 import Database.PostgreSQL.Simple
+import Database.PostgreSQL.Simple.ToField
 import Database.PostgreSQL.Simple.SqlQQ
 import Database.PostgreSQL.Simple.Migration
 import Types.Types
@@ -15,11 +16,12 @@ import Data.Time.Clock.POSIX
 import Data.Time.Clock
 import Data.Time.Format
 import Data.Int (Int64)
+import Data.Pool
 
 
 
-millisToUTC :: Integer -> UTCTime
-millisToUTC t = posixSecondsToUTCTime $ fromInteger t / 1000
+--millisToUTC :: Integer -> UTCTime
+--millisToUTC t = posixSecondsToUTCTime $ fromInteger t / 1000
 
 
 initMigrations :: Connection -> IO ()
@@ -29,12 +31,12 @@ initMigrations conn = do
         MigrationSuccess -> return ()
         MigrationError reason -> print reason
 
-writeBoxInTBid :: Integer -> Slug -> Int -> Connection -> WBox -> IO Int64
-writeBoxInTBid date slug' iid' conn box = execute conn q qdata
-        where qdata =  (date',  slug' , iid' , box)
-              date' = millisToUTC date
-              q = "insert into bid (bid_date, server_slug, item_id, item_count, min_w, bot_w, p_25, p_50, p_75, top_w, max_w) values (?,?,?,?,?,?,?,?,?,?,?)"
-              
+writeBoxInTBid :: UTCTime -> Slug -> Int -> WBox -> Pool Connection -> IO Int64
+writeBoxInTBid date slug' iid' box connPool = do withResource connPool execute'
+        where qdata =  (date,  slug' , iid' , ic box, botW box, p25 box, p50 box, p75 box, topW box)
+              q = "insert into bid (bid_date, server_slug, item_id, item_count, bot_w, p_25, p_50, p_75, top_w) values (?,?,?,?,?,?,?,?,?)"
+              execute' conn = execute conn q qdata 
+        --TODO withResource do bla bla bla      
 
 {-
 wowadp_db
