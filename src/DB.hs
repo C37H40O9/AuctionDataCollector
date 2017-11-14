@@ -1,7 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module DB (initMigrations, writeBoxInTBid)
     where
@@ -17,6 +15,7 @@ import Data.Time.Clock
 import Data.Time.Format
 import Data.Int (Int64)
 import Data.Pool
+import Control.Exception
 
 
 
@@ -30,7 +29,13 @@ initMigrations conn = do
         MigrationError reason -> print reason
 
 writeBoxInTBid :: UTCTime -> Slug -> Int -> WBox -> Pool Connection -> IO Int64
-writeBoxInTBid date slug' iid' box connPool = withResource connPool execute'
+writeBoxInTBid date slug' iid' box connPool' = withResource connPool' execute' `catches` [Handler (\ (ex::SqlError) -> hSqlErr ex)    ,
+                                                                                          Handler (\ (ex::ResultError) -> hSqlErr ex) ,
+                                                                                          Handler (\ (ex::QueryError) -> hSqlErr ex)  ,
+                                                                                          Handler (\ (ex::FormatError) -> hSqlErr ex) ]
         where qdata =  (date,  slug' , iid' , ic box, botW box, p25 box, p50 box, p75 box, topW box)
               q = "insert into bid (bid_date, server_slug, item_id, item_count, bot_w, p_25, p_50, p_75, top_w) values (?,?,?,?,?,?,?,?,?)"
               execute' conn = execute conn q qdata
+              hSqlErr e = do
+                print e
+                return 0 
