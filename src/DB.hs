@@ -33,7 +33,7 @@ writeBoxInTBid date slug' iid' box connPool' = withResource connPool' execute' `
                                                                                           Handler (\ (ex::ResultError) -> hSqlErr ex) ,
                                                                                           Handler (\ (ex::QueryError) -> hSqlErr ex)  ,
                                                                                           Handler (\ (ex::FormatError) -> hSqlErr ex) ]
-        where qdata =  (date,  slug' , iid' , ic box, botW box, p25 box, p50 box, p75 box, topW box)
+        where qdata =  (date,  slug' , iid') :. box
               q = "insert into bid (bid_date, server_slug, item_id, item_count, bot_w, p_25, p_50, p_75, top_w) values (?,?,?,?,?,?,?,?,?)"
               execute' conn = execute conn q qdata
               hSqlErr e = do
