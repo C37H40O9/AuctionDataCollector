@@ -177,7 +177,7 @@ harvestAuctionJson cfg ti a r = do
     case parseAuctions aj of
         Nothing -> return ()
         Just x -> do
-            i <-  M.traverseWithKey (\k v -> writeBoxInTBid t (slug r) k (fromJust $ bbid v) (connPool cfg) ) $  M.map seqStatsToWBoxed $ collect $ filter (\y -> itemId y `elem` ti) x
+            i <-  M.traverseWithKey (\k v -> writeBoxInTBuyout t (slug r) k (fromJust $ bbuyout v) (connPool cfg) ) $  M.map seqStatsToWBoxed $ collect $ filter (\y -> itemId y `elem` ti) x
             print i
 
 

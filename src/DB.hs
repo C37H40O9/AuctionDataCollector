@@ -28,13 +28,13 @@ initMigrations conn = do
         MigrationSuccess -> return ()
         MigrationError reason -> print reason
 
-writeBoxInTBid :: UTCTime -> Slug -> Int -> WBox -> Pool Connection -> IO Int64
-writeBoxInTBid date slug' iid' box connPool' = withResource connPool' execute' `catches` [Handler (\ (ex::SqlError) -> hSqlErr ex)    ,
+writeBoxInTBuyout :: UTCTime -> Slug -> Int -> WBox -> Pool Connection -> IO Int64
+writeBoxInTBuyout date slug' iid' box connPool' = withResource connPool' execute' `catches` [Handler (\ (ex::SqlError) -> hSqlErr ex)    ,
                                                                                           Handler (\ (ex::ResultError) -> hSqlErr ex) ,
                                                                                           Handler (\ (ex::QueryError) -> hSqlErr ex)  ,
                                                                                           Handler (\ (ex::FormatError) -> hSqlErr ex) ]
         where qdata =  (date,  slug' , iid') :. box
-              q = "insert into bid (bid_date, server_slug, item_id, item_count, bot_w, p_25, p_50, p_75, top_w) values (?,?,?,?,?,?,?,?,?)"
+              q = "insert into buyout (buyout_date, server_slug, item_id, item_count, bot_w, p_25, p_50, p_75, top_w) values (?,?,?,?,?,?,?,?,?)"
               execute' conn = execute conn q qdata
               hSqlErr e = do
                 print e
