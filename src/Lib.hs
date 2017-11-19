@@ -39,6 +39,7 @@ import Data.Configurator
 import Database.PostgreSQL.Simple
 import Data.Pool
 import Data.Maybe (fromJust)
+import Control.Exception
 
 
 
@@ -125,15 +126,18 @@ statsConcat  s1 s2 = IStats bi bu
 collect ::  [Auction] -> M.Map Int IStats
 collect  = foldl' (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b ) M.empty 
 
+allHttpExHandler ::  SomeException -> IO B.ByteString
+allHttpExHandler e = print e >> return B.empty
 
 takeRealms :: Config -> IO ()
 takeRealms cfg = do
     req <- C.parseRequest $  "https://" <> show (region cfg) <> ".api.battle.net/wow/realm/status?locale=" <> show (langLocale cfg) <> "&apikey=" <> apiKey cfg
-    bs<-runResourceT $ do               
-               response <- C.httpLbs (setRequestIgnoreStatus req) $ manager cfg
-               return $  C.responseBody response
+    let res = runResourceT $ do               
+                response <- C.httpLbs (setRequestIgnoreStatus req) $ manager cfg
+                return $  C.responseBody response
+    rj <- res `catch` allHttpExHandler
     incrCounter $ counter cfg
-    case parseRealms bs of 
+    case parseRealms rj of 
         Nothing -> return ()
         Just x -> addReqsToQ cfg $ S.fromList $ map (ReqAuc cfg ) $ filterRealmsByLocale (filterLocale cfg) $ filterSameRealms x
     
@@ -151,9 +155,10 @@ filterRealmsByLocale ls rs = filter (\y -> locale y `elem` ls) rs
 takeAuctionInfo :: Config -> Realm -> IO ()
 takeAuctionInfo cfg r = do
     req <- C.parseRequest $  "https://" <> show (region cfg) <> ".api.battle.net/wow/auction/data/" <> slug r <> "?locale=" <> show (langLocale cfg) <> "&apikey=" <> apiKey cfg
-    aj<-runResourceT $ do            
-            response <- C.httpLbs  (setRequestIgnoreStatus req) $ manager cfg
-            return $ C.responseBody response
+    let res = runResourceT $ do            
+                response <- C.httpLbs  (setRequestIgnoreStatus req) $ manager cfg
+                return $ C.responseBody response
+    aj <- res `catch` allHttpExHandler
     incrCounter $ counter cfg
     case parseAucFile aj of
         Nothing -> return ()
