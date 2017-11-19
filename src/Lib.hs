@@ -169,6 +169,7 @@ takeAuctionInfo cfg r = do
 harvestAuctionJson :: Config -> TrackingItems -> AucFile -> Realm ->  IO ()
 harvestAuctionJson cfg ti a r = do    
     let t = millisToUTC $ lastModified a
+        s = slug r
     putStrLn $ rname r <> " @ " <> show t
     req <- C.parseRequest $ url a
     aj<-runResourceT $ do 
@@ -177,8 +178,11 @@ harvestAuctionJson cfg ti a r = do
     case parseAuctions aj of
         Nothing -> return ()
         Just x -> do
-            i <-  M.traverseWithKey (\k v -> writeBoxInTBuyout t (slug r) k (fromJust $ bbuyout v) (connPool cfg) ) $  M.map seqStatsToWBoxed $ collect $ filter (\y -> itemId y `elem` ti) x
+            let l = M.toList $ M.map seqStatsToWBoxed $ collect $ filter (\y -> itemId y `elem` ti) x
+            i <- writeBoxInDB t s l (connPool cfg)
+            --M.traverseWithKey (\k v -> writeBoxInTBuyout t (slug r) k (fromJust $ bbuyout v) (connPool cfg) ) $  M.map seqStatsToWBoxed $ collect $ filter (\y -> itemId y `elem` ti) x
             print i
+            if i > 0 then changeUpdTime (updatedAt cfg) s t else pure ()
 
 
 addReqToQ :: Config -> ReqParams -> IO ()
@@ -247,7 +251,7 @@ updAucJson cfg = do
     unless b $ do
         ti <- trackingItems
         harvestAuctionJson cfg ti a r
-        changeUpdTime (updatedAt cfg) s t
+        --changeUpdTime (updatedAt cfg) s t
 
 
 
