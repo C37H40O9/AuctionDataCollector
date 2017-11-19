@@ -133,8 +133,7 @@ takeRealms cfg = do
                response <- C.httpLbs (setRequestIgnoreStatus req) $ manager cfg
                return $  C.responseBody response
     incrCounter $ counter cfg
-    let rr =  parseRealms bs
-    case rr of 
+    case parseRealms bs of 
         Nothing -> return ()
         Just x -> addReqsToQ cfg $ S.fromList $ map (ReqAuc cfg ) $ filterRealmsByLocale (filterLocale cfg) $ filterSameRealms x
     
@@ -156,24 +155,21 @@ takeAuctionInfo cfg r = do
             response <- C.httpLbs  (setRequestIgnoreStatus req) $ manager cfg
             return $ C.responseBody response
     incrCounter $ counter cfg
-    let af = parseAucFile aj
-    case af of
+    case parseAucFile aj of
         Nothing -> return ()
         Just x ->  atomically $ writeTChan (dlChan cfg) (DLAucJson x r)
     
 
 
 harvestAuctionJson :: Config -> TrackingItems -> AucFile -> Realm ->  IO ()
-harvestAuctionJson cfg ti a r = do
-    req <- C.parseRequest $ url a
+harvestAuctionJson cfg ti a r = do    
     let t = millisToUTC $ lastModified a
     putStrLn $ rname r <> " @ " <> show t
-    
+    req <- C.parseRequest $ url a
     aj<-runResourceT $ do 
             response <- C.httpLbs (setRequestIgnoreStatus req) $ manager cfg
             return $ C.responseBody response
-    let as = parseAuctions aj
-    case as of
+    case parseAuctions aj of
         Nothing -> return ()
         Just x -> do
             i <-  M.traverseWithKey (\k v -> writeBoxInTBid t (slug r) k (fromJust $ bbid v) (connPool cfg) ) $  M.map seqStatsToWBoxed $ collect $ filter (\y -> itemId y `elem` ti) x
