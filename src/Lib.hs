@@ -225,9 +225,7 @@ runJob cfg = do
         else do
             putMVar (counter cfg) (c' - rqlen)
             putMVar (reqQueue cfg) S.empty
-            mapConcurrently_ runRequest rq' 
-
-oneSecond = 1000000 :: Int
+            mapConcurrently_ runRequest rq'
 
 isActual :: MVar (M.Map Slug UTCTime) -> Slug -> UTCTime  -> IO Bool
 isActual m s t = do

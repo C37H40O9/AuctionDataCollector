@@ -19,6 +19,7 @@ module Types.Types ( WBox(..)
                    , Config(..)
                    , ReqParams(..)
                    , DLParams(..)
+                   , oneSecond
                    )
         where
 import Types.Locale
@@ -34,6 +35,9 @@ import Database.PostgreSQL.Simple.ToRow
 import Database.PostgreSQL.Simple.ToField
 import Data.Pool
 
+
+oneSecond :: Int
+oneSecond = 1000000
                 -- Type for whiskers box diagram
 data WBox = WBox { ic   :: Int  -- items count
                  , botW :: Int
