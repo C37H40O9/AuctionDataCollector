@@ -21,25 +21,15 @@ import Data.List (foldl')
 import Network.HTTP.Client ( setRequestIgnoreStatus)
 import qualified Network.HTTP.Conduit as C
 import Control.Monad.Trans.Resource
-import Control.Monad.Trans.Maybe
-import Control.Monad.IO.Class
-import Control.Applicative (liftA2)
-import Control.Monad (join, forever, when, unless)
+import Control.Monad (forever, unless)
 import Control.Concurrent.MVar
 import Data.Time.Clock.POSIX
 import Data.Time.Clock
-import System.Locale
-import Control.Monad.Trans.Class (lift)
 import Control.Concurrent
 import Control.Monad.STM
 import Control.Concurrent.STM.TChan
-import Foreign.StablePtr
-import qualified Control.Monad.Parallel as P
 import Control.Concurrent.Async
-import Data.Configurator
-import Database.PostgreSQL.Simple
 import Data.Pool
-import Data.Maybe (fromJust)
 import Control.Exception
 
 
