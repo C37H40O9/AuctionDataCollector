@@ -10,6 +10,7 @@ module Lib
 import Types.Types
 import Types.Locale
 import DB
+import Config
 import qualified Data.Map.Strict as M
 import qualified Data.Sequence as S
 import qualified Data.ByteString.Lazy as B
@@ -258,6 +259,7 @@ updAucJson cfg = do
 
 myfun :: IO ()
 myfun = do
+    {--
     conf <- load [Required "./config.cfg"]
     let dbconf = subconfig "database" conf
     let apiconf = subconfig "api" conf
@@ -293,8 +295,9 @@ myfun = do
                      , dlChan
                      , updatedAt
                      , connPool
-                     }
-    withResource connPool initMigrations
+                     } --}
+    cfg <- readCfg "./config.cfg"
+    withResource (connPool cfg) initMigrations
     --conn <- connect connInfo
     --initMigrations conn
     forkIO $ forever $ updAucJson cfg

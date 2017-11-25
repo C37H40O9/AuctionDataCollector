@@ -19,6 +19,7 @@ library
                       ,Types.Types
                       ,Types.Locale
                       ,DB
+                      ,Config
   build-depends:       base >= 4.7 && < 5
                       ,text
                       ,bytestring
