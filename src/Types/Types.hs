@@ -70,7 +70,6 @@ data WBoxedStats = WBoxedStats { bbid :: Maybe WBox
                                , bbuyout :: Maybe WBox
                                } deriving (Eq, Show)
 
-newtype AuctionS = AuctionS {auctions :: [Auction]} deriving (Eq, Show)
 
 newtype ItemS = ItemS {items :: [Item]} deriving (Eq, Show)
 
@@ -119,10 +118,9 @@ data Config = Config { apiKey :: ApiKey
                      , updatedAt :: MVar (M.Map Slug UTCTime)
                      , connPool :: Pool Connection
                      }
--- counter requestQueue manager realm aucfile 
+
 data ReqParams = ReqAuc     Config Realm 
                | ReqRealms  Config
-               -- | ReqAucJson (MVar Int) (MVar (S.Seq ReqParams  )) C.Manager AucFile Realm
 
 data DLParams = DLAucJson AucFile Realm
 
@@ -132,10 +130,7 @@ instance FromJSON AucFile where
         lastModified <- o .: "lastModified"
         return AucFile{..}
 
-instance FromJSON AuctionS where
-    parseJSON = withObject "auctions" $ \o -> do
-        auctions <- o .: "auctions"
-        return AuctionS{..}
+
 
 instance FromJSON ItemS where
     parseJSON = withObject "items" $ \o -> do
