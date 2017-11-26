@@ -132,7 +132,8 @@ takeRealms cfg = do
         Nothing -> return ()
         Just x -> addReqsToQ cfg $ S.fromList $ map (ReqAuc cfg ) $ filterRealmsByLocale (filterLocale cfg) $ filterSameRealms x
     
-
+filterItems :: TrackingItems -> ([Auction] -> [Auction])
+filterItems ti  = filter (\i -> itemId i `elem` ti) 
 
 filterSameRealms :: [Realm] -> [Realm]
 filterSameRealms [] = []
@@ -169,9 +170,8 @@ harvestAuctionJson cfg ti a r = do
     case parseAuctions aj of
         Nothing -> return ()
         Just x -> do
-            let l = M.toList $ M.map seqStatsToWBoxed $ collect $ filter (\y -> itemId y `elem` ti) x
+            let l = M.toList $ M.map seqStatsToWBoxed $ collect $ filterItems ti x
             i <- writeBoxInDB t s l (connPool cfg)
-            --M.traverseWithKey (\k v -> writeBoxInTBuyout t (slug r) k (fromJust $ bbuyout v) (connPool cfg) ) $  M.map seqStatsToWBoxed $ collect $ filter (\y -> itemId y `elem` ti) x
             print i
             if i > 0 then changeUpdTime (updatedAt cfg) s t else pure ()
 
