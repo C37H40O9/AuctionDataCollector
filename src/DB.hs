@@ -30,7 +30,7 @@ initMigrations conn = do
         MigrationError reason -> print reason
 
 hSqlErr ::(Show a) => a -> IO Int64
-hSqlErr e = print e >> pure 0
+hSqlErr e = print e *> pure 0
 
 sqlHandlers :: [Handler Int64]
 sqlHandlers = [Handler (\ (ex::SqlError) -> hSqlErr ex)    ,
@@ -45,7 +45,13 @@ writeBoxInTBuyout date slug' iid' box connPool' = withResource connPool' execute
               execute' conn = execute conn q qdata
 
 writeBoxInDB :: UTCTime -> Slug -> [(Int, WBoxedStats)] -> Pool Connection -> IO Int64
-writeBoxInDB date slug' kv connPool' = withResource connPool' executeMany' `catches` sqlHandlers
-        where q = "insert into buyout (buyout_date, server_slug, item_id, item_count, min_w, bot_w, p_25, p_50, p_75, top_w, max_w) values (?,?,?,?,?,?,?,?,?,?,?)"
-              qdata = map (\ (i,b) -> (date, slug', i) :. fromJust (bbuyout b)) kv
-              executeMany' conn = executeMany conn q qdata
+writeBoxInDB date slug' kv connPool' = do 
+    iBout <- withResource connPool' eManyBuyout `catches` sqlHandlers
+    iBid <- withResource connPool' eManyBid `catches` sqlHandlers
+    pure (iBout + iBid)
+        where qBuyout = "insert into buyout (buyout_date, server_slug, item_id, item_count, min_w, bot_w, p_25, p_50, p_75, top_w, max_w) values (?,?,?,?,?,?,?,?,?,?,?)"
+              dBuyout = map (\ (i,b) -> (date, slug', i) :. fromJust (bbuyout b)) kv
+              qBid = "insert into bid (bid_date, server_slug, item_id, item_count, min_w, bot_w, p_25, p_50, p_75, top_w, max_w) values (?,?,?,?,?,?,?,?,?,?,?)"
+              dBid = map (\ (i,b) -> (date, slug', i) :. fromJust (bbid b)) kv
+              eManyBuyout conn = executeMany conn qBuyout dBuyout
+              eManyBid conn = executeMany conn qBid dBid
