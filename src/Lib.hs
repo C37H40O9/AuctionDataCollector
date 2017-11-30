@@ -39,8 +39,8 @@ trackingItems :: IO TrackingItems
 trackingItems = do
     res <- itemsDec
     case res of
-        Left err -> return []
-        Right i -> return $ map iid (items i)
+        Left err -> pure []
+        Right i -> pure $ map iid (items i)
 
 
 parseToBox :: [Int] -> WBox
@@ -118,18 +118,18 @@ collect ::  [Auction] -> M.Map Int IStats
 collect  = foldl' (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b ) M.empty 
 
 allHttpExHandler ::  SomeException -> IO B.ByteString
-allHttpExHandler e = print e >> return B.empty
+allHttpExHandler e = print e *> pure B.empty
 
 takeRealms :: Config -> IO ()
 takeRealms cfg = do
     req <- C.parseRequest $  "https://" <> show (region cfg) <> ".api.battle.net/wow/realm/status?locale=" <> show (langLocale cfg) <> "&apikey=" <> apiKey cfg
     let res = runResourceT $ do               
                 response <- C.httpLbs (setRequestIgnoreStatus req) $ manager cfg
-                return $  C.responseBody response
+                pure $  C.responseBody response
     rj <- res `catch` allHttpExHandler
     incrCounter $ counter cfg
     case parseRealms rj of 
-        Nothing -> return ()
+        Nothing -> pure ()
         Just x -> addReqsToQ cfg $ S.fromList $ map (ReqAuc cfg ) $ filterRealmsByLocale (filterLocale cfg) $ filterSameRealms x
     
 filterItems :: TrackingItems -> ([Auction] -> [Auction])
@@ -149,11 +149,11 @@ takeAuctionInfo cfg r = do
     req <- C.parseRequest $  "https://" <> show (region cfg) <> ".api.battle.net/wow/auction/data/" <> slug r <> "?locale=" <> show (langLocale cfg) <> "&apikey=" <> apiKey cfg
     let res = runResourceT $ do            
                 response <- C.httpLbs  (setRequestIgnoreStatus req) $ manager cfg
-                return $ C.responseBody response
+                pure $ C.responseBody response
     aj <- res `catch` allHttpExHandler
     incrCounter $ counter cfg
     case parseAucFile aj of
-        Nothing -> return ()
+        Nothing -> pure ()
         Just x ->  atomically $ writeTChan (dlChan cfg) (DLAucJson x r)
     
 
@@ -166,9 +166,9 @@ harvestAuctionJson cfg ti a r = do
     req <- C.parseRequest $ url a
     aj<-runResourceT $ do 
             response <- C.httpLbs (setRequestIgnoreStatus req) $ manager cfg
-            return $ C.responseBody response
+            pure $ C.responseBody response
     case parseAuctions aj of
-        Nothing -> return ()
+        Nothing -> pure ()
         Just x -> do
             let l = M.toList $ M.map seqStatsToWBoxed $ collect $ filterItems ti x
             i <- writeBoxInDB t s l (connPool cfg)
@@ -222,8 +222,8 @@ isActual m s t = do
     m' <- readMVar m
     let v = M.lookup s m'
     case v of
-        Nothing -> return False
-        Just x -> return $ x >= t
+        Nothing -> pure False
+        Just x -> pure $ x >= t
 
 changeUpdTime :: MVar (M.Map Slug UTCTime) -> Slug -> UTCTime  -> IO ()
 changeUpdTime u s t = do
@@ -253,4 +253,4 @@ myfun = do
     forever $ do
                 forkIO $ runJob cfg
                 threadDelay oneSecond
-                return ()
+                pure ()

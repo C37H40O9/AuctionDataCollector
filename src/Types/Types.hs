@@ -128,14 +128,14 @@ instance FromJSON AucFile where
     parseJSON = withObject "file" $ \o -> do 
         url <- o .: "url"
         lastModified <- o .: "lastModified"
-        return AucFile{..}
+        pure AucFile{..}
 
 
 
 instance FromJSON ItemS where
     parseJSON = withObject "items" $ \o -> do
         items <- o .: "items"
-        return ItemS{..}
+        pure ItemS{..}
 
 instance FromJSON Auction where
     parseJSON = withObject "aucs" $ \o -> do
@@ -143,13 +143,13 @@ instance FromJSON Auction where
         buyout <- o .: "buyout"
         quantity <- o .: "quantity"
         itemId <- o .: "item"
-        return Auction{..}
+        pure Auction{..}
 
 instance FromJSON Item where
     parseJSON = withObject "items" $ \o -> do
         name <- o .: "name"
         iid <- o .: "id"
-        return Item{..}
+        pure Item{..}
 
 
 
@@ -159,4 +159,4 @@ instance FromJSON Realm where
            slug <- o .: "slug"
            locale <- o .: "locale"
            connectedRealms <- o .: "connected_realms"
-           return Realm{..}
+           pure Realm{..}

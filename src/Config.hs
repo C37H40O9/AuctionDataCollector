@@ -57,5 +57,5 @@ readCfg fp = do
                      , updatedAt
                      , connPool
                      }
-    return cfg
+    pure cfg
 

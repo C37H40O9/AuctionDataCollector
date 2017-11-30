@@ -26,11 +26,11 @@ initMigrations :: Connection -> IO ()
 initMigrations conn = do    
     res<- runMigrations False conn [MigrationInitialization, MigrationDirectory "migrations"]
     case res of
-        MigrationSuccess -> return ()
+        MigrationSuccess -> pure ()
         MigrationError reason -> print reason
 
 hSqlErr ::(Show a) => a -> IO Int64
-hSqlErr e = print e >> return 0
+hSqlErr e = print e >> pure 0
 
 sqlHandlers :: [Handler Int64]
 sqlHandlers = [Handler (\ (ex::SqlError) -> hSqlErr ex)    ,
