@@ -31,17 +31,17 @@ data Locale = DE_DE
 
 pLocale :: Syntax f => f Locale
 pLocale =  pure DE_DE <* text "de_DE"
-   <|> pure EN_GB <* text "en_GB"
-   <|> pure ES_ES <* text "es_ES"
-   <|> pure FR_FR <* text "fr_FR"
-   <|> pure IT_IT <* text "it_IT"
-   <|> pure PT_PT <* text "pt_PT"
-   <|> pure RU_RU <* text "ru_RU"
-   <|> pure KO_KR <* text "ko_KR"
-   <|> pure ZH_TW <* text "zh_TW"
-   <|> pure EN_US <* text "en_US"
-   <|> pure PT_BR <* text "pt_BR"
-   <|> pure ES_MX <* text "es_MX"
+       <|> pure EN_GB <* text "en_GB"
+       <|> pure ES_ES <* text "es_ES"
+       <|> pure FR_FR <* text "fr_FR"
+       <|> pure IT_IT <* text "it_IT"
+       <|> pure PT_PT <* text "pt_PT"
+       <|> pure RU_RU <* text "ru_RU"
+       <|> pure KO_KR <* text "ko_KR"
+       <|> pure ZH_TW <* text "zh_TW"
+       <|> pure EN_US <* text "en_US"
+       <|> pure PT_BR <* text "pt_BR"
+       <|> pure ES_MX <* text "es_MX"
 
 runParser :: Parser t -> String -> [(t, String)]
 runParser (Parser p) = p
