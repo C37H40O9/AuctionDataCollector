@@ -40,17 +40,19 @@ oneSecond :: Int
 oneSecond = 1000000
                 -- Type for whiskers box diagram
 data WBox = WBox { ic   :: Int  -- items count
+                 , minW :: Int
                  , botW :: Int
                  , p25  :: Int
                  , p50  :: Int
                  , p75  :: Int
-                 , topW :: Int } deriving (Eq, Show)
+                 , topW :: Int
+                 , maxW :: Int } deriving (Eq, Show)
 
 instance ToRow WBox where
-    toRow b = map toField $ [ic , botW , p25 , p50 , p75 , topW ] <*> pure b
+    toRow b = map toField $ [ic , minW , botW , p25 , p50 , p75 , topW , maxW ] <*> pure b
 
 instance ToField WBox where
-    toField b = Many $ map toField $ [ic ,botW , p25 , p50 , p75 , topW  ] <*> pure b
+    toField b = Many $ map toField $ [ic , minW , botW , p25 , p50 , p75 , topW , maxW  ] <*> pure b
 
 data Item = Item { name :: String
                  , iid :: Int

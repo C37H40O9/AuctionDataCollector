@@ -46,6 +46,6 @@ writeBoxInTBuyout date slug' iid' box connPool' = withResource connPool' execute
 
 writeBoxInDB :: UTCTime -> Slug -> [(Int, WBoxedStats)] -> Pool Connection -> IO Int64
 writeBoxInDB date slug' kv connPool' = withResource connPool' executeMany' `catches` sqlHandlers
-        where q = "insert into buyout (buyout_date, server_slug, item_id, item_count, bot_w, p_25, p_50, p_75, top_w) values (?,?,?,?,?,?,?,?,?)"
+        where q = "insert into buyout (buyout_date, server_slug, item_id, item_count, min_w, bot_w, p_25, p_50, p_75, top_w, max_w) values (?,?,?,?,?,?,?,?,?,?,?)"
               qdata = map (\ (i,b) -> (date, slug', i) :. fromJust (bbuyout b)) kv
               executeMany' conn = executeMany conn q qdata

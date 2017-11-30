@@ -44,7 +44,7 @@ trackingItems = do
 
 
 parseToBox :: [Int] -> WBox
-parseToBox [i, a, b, c, d, e] = WBox i a b c d e
+parseToBox [i, a, b, c, d, e, f, g] = WBox i a b c d e f g
 
 
 seqToBox :: S.Seq Int -> Maybe WBox
@@ -55,7 +55,7 @@ seqToBox s | S.null s = Nothing
                     maxIndex = l - 1
                     s' = S.sort s
                     ix :: [Int]
-                    ix = quot . (* maxIndex) <$> [9,25,50,75,91] <*> pure 100
+                    ix = quot . (* maxIndex) <$> [0,9,25,50,75,91,100] <*> pure 100
                     ws = S.index s' <$> ix
                    
 seqStatsToWBoxed :: IStats -> WBoxedStats
