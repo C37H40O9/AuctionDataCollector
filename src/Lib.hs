@@ -176,7 +176,8 @@ harvestAuctionJson cfg ti a r = do
             i <- writeBoxInDB t s l connP
             print i
             if i > 0 then do
-                _ <- updLastModified t s connP
+                ui <- updLastModified t s connP
+                print ui
                 changeUpdTime (updatedAt cfg) s t
             else pure ()
 
@@ -246,11 +247,16 @@ updAucJson cfg = do
         ti <- trackingItems
         harvestAuctionJson cfg ti a r
 
+loadLastModified :: Config -> IO ()
+loadLastModified cfg = do
+    xs <- readLastModified (connPool cfg)
+    putMVar (updatedAt cfg) $ M.fromList xs
 
 myfun :: IO ()
 myfun = do
     cfg <- readCfg "./config.cfg"
     withResource (connPool cfg) initMigrations
+    loadLastModified cfg
     forkIO $ forever $ updAucJson cfg
     forkIO $ forever $ do 
         addReqToQ cfg (ReqRealms cfg)

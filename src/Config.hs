@@ -37,7 +37,7 @@ readCfg fp = do
     reqQueue <- newMVar S.empty :: IO (MVar (S.Seq ReqParams))
     dlChan <- atomically newTChan :: IO (TChan DLParams)
     counter <- newMVar apiLimit :: IO (MVar Int)
-    updatedAt <- newMVar M.empty :: IO (MVar (M.Map Slug UTCTime))
+    updatedAt <- newEmptyMVar :: IO (MVar (M.Map Slug UTCTime))
     manager <- C.newManager C.tlsManagerSettings
     let connInfo = ConnectInfo { connectHost
                                , connectPort
