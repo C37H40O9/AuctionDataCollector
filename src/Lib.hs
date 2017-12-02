@@ -169,7 +169,7 @@ harvestAuctionJson cfg ti a r = do
     response <- C.httpLbs (setRequestIgnoreStatus req) $ manager cfg
     pure $ C.responseBody response
   case parseAuctions aj of
-    Nothing -> pure ()
+    Nothing -> pure 0
     Just x -> do
       let l = M.toList $ M.map seqStatsToWBoxed $ collect $ filterItems ti x
       writeBoxInDB t s l connP
@@ -242,7 +242,7 @@ updAucJson cfg = do
     print i
     case compare i 0 of
       GT -> do
-        print =<< updLastModified t s connP
+        print =<< updLastModified t s (connPool cfg)
         changeUpdTime (updatedAt cfg) s t
       _ -> pure ()
 
