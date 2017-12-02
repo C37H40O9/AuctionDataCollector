@@ -38,7 +38,7 @@ trackingItems :: IO TrackingItems
 trackingItems = do
   res <- itemsDec
   case res of
-    Left err -> pure []
+    Left _ -> pure []
     Right i -> pure $ map iid (items i)
 
 
