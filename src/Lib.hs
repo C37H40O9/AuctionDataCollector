@@ -30,7 +30,7 @@ import Control.Concurrent.STM.TChan
 import Control.Concurrent.Async
 import Data.Pool
 import Control.Exception
-
+import Data.Int (Int64)
 
 
 
