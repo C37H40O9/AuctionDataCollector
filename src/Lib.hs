@@ -124,8 +124,8 @@ updateRealms :: Config -> IO ()
 updateRealms cfg = do
   req <- C.parseRequest $ "https://" <> show (region cfg) <> ".api.battle.net/wow/realm/status?locale=" <> show (langLocale cfg) <> "&apikey=" <> apiKey cfg
   let res = runResourceT $ do
-    response <- C.httpLbs (setRequestIgnoreStatus req) $ manager cfg
-    pure $ C.responseBody response
+        response <- C.httpLbs (setRequestIgnoreStatus req) $ manager cfg
+        pure $ C.responseBody response
   rj <- res `catch` allHttpExHandler
   incrCounter $ counter cfg
   case parseRealms rj of 
@@ -149,8 +149,8 @@ takeAuctionInfo :: Config -> Realm -> IO ()
 takeAuctionInfo cfg r = do
   req <- C.parseRequest $  "https://" <> show (region cfg) <> ".api.battle.net/wow/auction/data/" <> slug r <> "?locale=" <> show (langLocale cfg) <> "&apikey=" <> apiKey cfg
   let res = runResourceT $ do
-    response <- C.httpLbs  (setRequestIgnoreStatus req) $ manager cfg
-    pure $ C.responseBody response
+        response <- C.httpLbs  (setRequestIgnoreStatus req) $ manager cfg
+        pure $ C.responseBody response
   aj <- res `catch` allHttpExHandler
   incrCounter $ counter cfg
   case parseAucFile aj of
@@ -161,8 +161,8 @@ takeAuctionInfo cfg r = do
 harvestAuctionJson :: Config -> TrackingItems -> AucFile -> Realm -> IO ()
 harvestAuctionJson cfg ti a r = do
   let t = millisToUTC $ lastModified a
-    s = slug r
-    connP = connPool cfg
+      s = slug r
+      connP = connPool cfg
   putStrLn $ rname r <> " @ " <> show t
   req <- C.parseRequest $ url a
   aj<-runResourceT $ do 
