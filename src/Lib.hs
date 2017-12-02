@@ -174,11 +174,11 @@ harvestAuctionJson cfg ti a r = do
       let l = M.toList $ M.map seqStatsToWBoxed $ collect $ filterItems ti x
       i <- writeBoxInDB t s l connP
       print i
-      if i > 0 then do
-        ui <- updLastModified t s connP
-        print ui
-        changeUpdTime (updatedAt cfg) s t
-      else pure ()
+      case compare i 0 of
+        GT -> do
+          print =<< updLastModified t s connP
+          changeUpdTime (updatedAt cfg) s t
+        _ -> pure ()
 
 
 addReqToQ :: Config -> ReqParams -> IO ()
@@ -211,13 +211,13 @@ runJob cfg = do
   c' <- takeMVar (counter cfg)
   rq' <- takeMVar (reqQueue cfg)
   let rqlen = S.length rq'
-  if rqlen >= c'
-    then do
+  case compare c' rqlen of
+    LT -> do
       putMVar (counter cfg) 0
       let (r,t) = S.splitAt c' rq'
       putMVar (reqQueue cfg) t
-      mapConcurrently_ runRequest r 
-    else do
+      mapConcurrently_ runRequest r
+    _ -> do
       putMVar (counter cfg) (c' - rqlen)
       putMVar (reqQueue cfg) S.empty
       mapConcurrently_ runRequest rq'
