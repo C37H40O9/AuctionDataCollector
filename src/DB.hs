@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module DB (initMigrations, writeBoxInTBuyout , writeBoxInDB)
+module DB (initMigrations, writeBoxInTBuyout , writeBoxInDB, updLastModified)
     where
 
 import Database.PostgreSQL.Simple
@@ -17,6 +17,7 @@ import Data.Int (Int64)
 import Data.Pool
 import Control.Exception
 import Data.Maybe (fromJust)
+import Data.ByteString (ByteString)
 
 
 
@@ -31,6 +32,9 @@ initMigrations conn = do
 
 hSqlErr ::(Show a) => a -> IO Int64
 hSqlErr e = print e *> pure 0
+
+uniqueViolation :: ByteString
+uniqueViolation = "23505"
 
 sqlHandlers :: [Handler Int64]
 sqlHandlers = [Handler (\ (ex::SqlError) -> hSqlErr ex)    ,
@@ -55,3 +59,10 @@ writeBoxInDB date slug' kv connPool' = do
               dBid = map (\ (i,b) -> (date, slug', i) :. fromJust (bbid b)) kv
               eManyBuyout conn = executeMany conn qBuyout dBuyout
               eManyBid conn = executeMany conn qBid dBid
+
+updLastModified :: UTCTime -> Slug -> Pool Connection -> IO Int64
+updLastModified date slug' connPool' = withResource connPool' execute' `catches` sqlHandlers
+        where q = "update last_modified set upd_date = ? where server_slug = ?"
+              qdata = (date, slug')
+              execute' c = execute c q qdata
+
