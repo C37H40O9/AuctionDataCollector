@@ -37,10 +37,10 @@ uniqueViolation :: ByteString
 uniqueViolation = "23505"
 
 sqlHandlers :: [Handler Int64]
-sqlHandlers = [Handler (\ (ex::SqlError) -> hSqlErr ex)    ,
-               Handler (\ (ex::ResultError) -> hSqlErr ex) ,
-               Handler (\ (ex::QueryError) -> hSqlErr ex)  ,
-               Handler (\ (ex::FormatError) -> hSqlErr ex) ]
+sqlHandlers = [Handler (\ (ex::SqlError) -> hSqlErr ex)
+              ,Handler (\ (ex::ResultError) -> hSqlErr ex)
+              ,Handler (\ (ex::QueryError) -> hSqlErr ex)
+              ,Handler (\ (ex::FormatError) -> hSqlErr ex)]
 
 
 
