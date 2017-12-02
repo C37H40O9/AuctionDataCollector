@@ -158,7 +158,7 @@ takeAuctionInfo cfg r = do
     Just x ->  atomically $ writeTChan (dlChan cfg) (DLAucJson x r)
 
 
-harvestAuctionJson :: Config -> TrackingItems -> AucFile -> Realm -> IO ()
+harvestAuctionJson :: Config -> TrackingItems -> AucFile -> Realm -> IO Int64
 harvestAuctionJson cfg ti a r = do
   let t = millisToUTC $ lastModified a
       s = slug r
@@ -172,13 +172,7 @@ harvestAuctionJson cfg ti a r = do
     Nothing -> pure ()
     Just x -> do
       let l = M.toList $ M.map seqStatsToWBoxed $ collect $ filterItems ti x
-      i <- writeBoxInDB t s l connP
-      print i
-      case compare i 0 of
-        GT -> do
-          print =<< updLastModified t s connP
-          changeUpdTime (updatedAt cfg) s t
-        _ -> pure ()
+      writeBoxInDB t s l connP
 
 
 addReqToQ :: Config -> ReqParams -> IO ()
@@ -244,7 +238,13 @@ updAucJson cfg = do
   b <- isActual (updatedAt cfg) s t
   unless b $ do
     ti <- trackingItems
-    harvestAuctionJson cfg ti a r
+    i <- harvestAuctionJson cfg ti a r
+    print i
+    case compare i 0 of
+      GT -> do
+        print =<< updLastModified t s connP
+        changeUpdTime (updatedAt cfg) s t
+      _ -> pure ()
 
 loadLastModified :: Config -> IO ()
 loadLastModified cfg = do
