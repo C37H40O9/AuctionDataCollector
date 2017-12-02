@@ -120,8 +120,8 @@ collect  = foldl' (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b
 allHttpExHandler ::  SomeException -> IO B.ByteString
 allHttpExHandler e = print e *> pure B.empty
 
-takeRealms :: Config -> IO ()
-takeRealms cfg = do
+updateRealms :: Config -> IO ()
+updateRealms cfg = do
     req <- C.parseRequest $  "https://" <> show (region cfg) <> ".api.battle.net/wow/realm/status?locale=" <> show (langLocale cfg) <> "&apikey=" <> apiKey cfg
     let res = runResourceT $ do               
                 response <- C.httpLbs (setRequestIgnoreStatus req) $ manager cfg
@@ -199,7 +199,7 @@ millisToUTC t = posixSecondsToUTCTime $ fromInteger t / 1000
 runRequest :: ReqParams  -> IO()
 runRequest rp = case rp of
     ReqAuc cfg r    -> takeAuctionInfo cfg r
-    ReqRealms cfg   -> takeRealms cfg
+    ReqRealms cfg   -> updateRealms cfg
 
 
 runJob :: Config -> IO ()
