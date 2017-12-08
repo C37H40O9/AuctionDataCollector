@@ -21,7 +21,8 @@ module Types.Types ( WBox(..)
                    , DLParams(..)
                    , oneSecond
                    )
-        where
+  where
+
 import Types.Locale
 import qualified Data.Sequence as S
 import Data.Aeson
@@ -40,34 +41,31 @@ import Data.Monoid ((<>))
 oneSecond :: Int
 oneSecond = 1000000
                 -- Type for whiskers box diagram
-data WBox = WBox { ic   :: Int  -- items count
-                 , minW :: Int
-                 , botW :: Int
-                 , p25  :: Int
-                 , p50  :: Int
-                 , p75  :: Int
-                 , topW :: Int
-                 , maxW :: Int } deriving (Eq, Show)
+data WBox = WBox {ic   :: Int  -- items count
+                 ,minW :: Int
+                 ,botW :: Int
+                 ,p25  :: Int
+                 ,p50  :: Int
+                 ,p75  :: Int
+                 ,topW :: Int
+                 ,maxW :: Int} deriving (Eq, Show)
 
 instance ToRow WBox where
-    toRow b = map toField $ [ic , minW , botW , p25 , p50 , p75 , topW , maxW ] <*> pure b
+    toRow b = map toField $ [ic, minW, botW, p25, p50, p75, topW, maxW] <*> pure b
 
 instance ToField WBox where
-    toField b = Many $ map toField $ [ic , minW , botW , p25 , p50 , p75 , topW , maxW  ] <*> pure b
+    toField b = Many $ map toField $ [ic, minW, botW, p25, p50, p75, topW, maxW] <*> pure b
 
-data Item = Item { name :: String
-                 , iid :: Int
-                 } deriving (Eq, Show)
+data Item = Item {name :: String
+                 ,iid :: Int} deriving (Eq, Show)
 
-data Auction = Auction { bid :: Int
-                       , buyout :: Int
-                       , quantity :: Int
-                       , itemId :: Int
-                       } deriving (Eq, Show)
+data Auction = Auction {bid :: Int
+                       ,buyout :: Int
+                       ,quantity :: Int
+                       ,itemId :: Int} deriving (Eq, Show)
 
-data IStats = IStats { bid' :: S.Seq Int
-                     , buyout' :: S.Seq Int
-                     } deriving (Eq, Show)
+data IStats = IStats {bid' :: S.Seq Int
+                     ,buyout' :: S.Seq Int} deriving (Eq, Show)
 
 instance Monoid IStats where
   mempty = IStats S.empty S.empty
@@ -75,14 +73,10 @@ instance Monoid IStats where
   s1 `mappend` s2 = IStats (bid' s1 <> bid' s2) (buyout' s1 <> buyout' s2)
 
 
-
-data WBoxedStats = WBoxedStats { bbid :: Maybe WBox
-                               , bbuyout :: Maybe WBox
-                               } deriving (Eq, Show)
-
+data WBoxedStats = WBoxedStats {bbid :: Maybe WBox
+                               ,bbuyout :: Maybe WBox} deriving (Eq, Show)
 
 newtype ItemS = ItemS {items :: [Item]} deriving (Eq, Show)
-
 
 type ApiKey = String
 
@@ -107,27 +101,25 @@ data Region = EU | KR | TW | US deriving (Eq, Ord, Show, Read)
 
 
 data Realm = Realm
-             { rname :: String
-             , slug :: Slug
-             , locale :: Locale
-             , connectedRealms :: [Slug]} deriving (Eq, Show)
+             {rname :: String
+             ,slug :: Slug
+             ,locale :: Locale
+             ,connectedRealms :: [Slug]} deriving (Eq, Show)
 
 
+data AucFile = AucFile {url          :: String
+                       ,lastModified :: Integer} deriving (Eq, Show)
 
-data AucFile = AucFile { url          :: String
-                       , lastModified :: Integer} deriving (Eq, Show)
-
-data Config = Config { apiKey :: ApiKey
-                     , region :: Region
-                     , langLocale :: Locale
-                     , filterLocale :: [Locale]
-                     , counter :: MVar Int
-                     , reqQueue :: MVar (S.Seq ReqParams)
-                     , manager :: C.Manager
-                     , dlChan :: TChan DLParams
-                     , updatedAt :: MVar (M.Map Slug UTCTime)
-                     , connPool :: Pool Connection
-                     }
+data Config = Config {apiKey :: ApiKey
+                     ,region :: Region
+                     ,langLocale :: Locale
+                     ,filterLocale :: [Locale]
+                     ,counter :: MVar Int
+                     ,reqQueue :: MVar (S.Seq ReqParams)
+                     ,manager :: C.Manager
+                     ,dlChan :: TChan DLParams
+                     ,updatedAt :: MVar (M.Map Slug UTCTime)
+                     ,connPool :: Pool Connection}
 
 data ReqParams = ReqAuc     Config Realm 
                | ReqRealms  Config
@@ -135,38 +127,34 @@ data ReqParams = ReqAuc     Config Realm
 data DLParams = DLAucJson AucFile Realm
 
 instance FromJSON AucFile where
-    parseJSON = withObject "file" $ \o -> do 
-        url <- o .: "url"
-        lastModified <- o .: "lastModified"
-        pure AucFile{..}
-
-
+  parseJSON = withObject "file" $ \o -> do 
+    url <- o .: "url"
+    lastModified <- o .: "lastModified"
+    pure AucFile{..}
 
 instance FromJSON ItemS where
-    parseJSON = withObject "items" $ \o -> do
-        items <- o .: "items"
-        pure ItemS{..}
+  parseJSON = withObject "items" $ \o -> do
+    items <- o .: "items"
+    pure ItemS{..}
 
 instance FromJSON Auction where
-    parseJSON = withObject "aucs" $ \o -> do
-        bid <- o .: "bid"
-        buyout <- o .: "buyout"
-        quantity <- o .: "quantity"
-        itemId <- o .: "item"
-        pure Auction{..}
+  parseJSON = withObject "aucs" $ \o -> do
+    bid <- o .: "bid"
+    buyout <- o .: "buyout"
+    quantity <- o .: "quantity"
+    itemId <- o .: "item"
+    pure Auction{..}
 
 instance FromJSON Item where
-    parseJSON = withObject "items" $ \o -> do
-        name <- o .: "name"
-        iid <- o .: "id"
-        pure Item{..}
-
-
+  parseJSON = withObject "items" $ \o -> do
+    name <- o .: "name"
+    iid <- o .: "id"
+    pure Item{..}
 
 instance FromJSON Realm where
-    parseJSON = withObject "realm" $ \o -> do
-           rname <- o .: "name"
-           slug <- o .: "slug"
-           locale <- o .: "locale"
-           connectedRealms <- o .: "connected_realms"
-           pure Realm{..}
+  parseJSON = withObject "realm" $ \o -> do
+    rname <- o .: "name"
+    slug <- o .: "slug"
+    locale <- o .: "locale"
+    connectedRealms <- o .: "connected_realms"
+    pure Realm{..}

@@ -56,7 +56,7 @@ seqToBox s | S.null s = Nothing
              ix :: [Int]
              ix = quot . (* maxIndex) <$> [0,9,25,50,75,91,100] <*> pure 100
              ws = S.index s' <$> ix
-                   
+
 seqStatsToWBoxed :: IStats -> WBoxedStats
 seqStatsToWBoxed s = WBoxedStats (seqToBox $ bid' s) (seqToBox $ buyout' s)
 
@@ -258,4 +258,3 @@ myfun = do
   forever $ do
     forkIO $ runJob cfg
     threadDelay oneSecond
-    pure ()

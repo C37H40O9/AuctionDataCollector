@@ -3,16 +3,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Types.Locale ( Locale(..) )
-    where
+  where
 
 import Prelude hiding (Applicative(..), print)
 import Text.Syntax
 import Text.Syntax.Parser.Naive
 import Text.Syntax.Printer.Naive
-import qualified Data.Aeson.Types  as AT                        ( Parser )
+import qualified Data.Aeson.Types  as AT ( Parser )
 import Data.Aeson
 import qualified Data.Text.Lazy as TL
-import qualified Control.Applicative as CA                      ( empty, pure )
+import qualified Control.Applicative as CA ( empty, pure )
 import Data.Maybe (fromJust)
 
 data Locale = DE_DE
@@ -51,7 +51,7 @@ instance Read Locale where readsPrec _ = runParser pLocale
 instance Show Locale where show = fromJust . print pLocale
 
 instance FromJSON Locale where
-    parseJSON (String t) =  fromString (TL.unpack (TL.fromStrict t))
-        where fromString :: String -> AT.Parser Locale
-              fromString s = CA.pure (read s :: Locale)
-    parseJSON _ = CA.empty
+  parseJSON (String t) =  fromString (TL.unpack (TL.fromStrict t))
+    where fromString :: String -> AT.Parser Locale
+          fromString s = CA.pure (read s :: Locale)
+  parseJSON _ = CA.empty
