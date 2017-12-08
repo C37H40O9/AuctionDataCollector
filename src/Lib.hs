@@ -101,10 +101,12 @@ parseRealms x = parseMaybe realmsParser =<< decode x
 
 
 aucToIStats :: Auction -> IStats
-aucToIStats a = IStats {bid' = S.replicate (quantity a) (quot  (bid a) (quantity a))
-                       ,buyout' = if buyout a > 0 then S.replicate (quantity a) (quot (buyout a) (quantity a)) else S.empty
-                       }
-
+aucToIStats a = IStats bid' buyout'
+  where
+    q = quantity a
+    bid' = S.replicate q $ quot (bid a) q
+    buyout' | buyout a > 0 = S.replicate q $ quot (buyout a) q
+            | otherwise = S.empty
 
 
 --foldl' :: Foldable t => (b -> a -> b) -> b -> t a -> b

@@ -60,9 +60,15 @@ writeBoxInDB date slug' kv connPool' = do
   iBid <- withResource connPool' eManyBid `catches` hSqlWErr
   pure (iBout + iBid)
     where 
-      qBuyout = "insert into buyout (buyout_date, server_slug, item_id, item_count, min_w, bot_w, p_25, p_50, p_75, top_w, max_w) values (?,?,?,?,?,?,?,?,?,?,?)"
+      qBuyout =
+        "insert into buyout \
+        \(buyout_date, server_slug, item_id, item_count, min_w, bot_w, p_25, p_50, p_75, top_w, max_w) \
+        \values (?,?,?,?,?,?,?,?,?,?,?)"
       dBuyout = map (\ (i,b) -> (date, slug', i) :. fromJust (bbuyout b)) kv
-      qBid = "insert into bid (bid_date, server_slug, item_id, item_count, min_w, bot_w, p_25, p_50, p_75, top_w, max_w) values (?,?,?,?,?,?,?,?,?,?,?)"
+      qBid =
+        "insert into bid \
+        \(bid_date, server_slug, item_id, item_count, min_w, bot_w, p_25, p_50, p_75, top_w, max_w) \
+        \values (?,?,?,?,?,?,?,?,?,?,?)"
       dBid = map (\ (i,b) -> (date, slug', i) :. fromJust (bbid b)) kv
       eManyBuyout conn = executeMany conn qBuyout dBuyout
       eManyBid conn = executeMany conn qBid dBid
