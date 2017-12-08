@@ -127,7 +127,7 @@ updateRealms cfg = do
     Nothing -> pure ()
     Just x -> addReqsToQ cfg $ S.fromList $ map (ReqAuc cfg ) $ filterRealmsByLocale (filterLocale cfg) $ filterSameRealms x
     
-filterItems :: TrackingItems -> ([Auction] -> [Auction])
+filterItems :: TrackingItems -> [Auction] -> [Auction]
 filterItems ti  = filter (\i -> itemId i `elem` ti)
 
 filterSameRealms :: [Realm] -> [Realm]
