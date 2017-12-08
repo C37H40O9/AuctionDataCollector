@@ -34,6 +34,7 @@ import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.ToRow
 import Database.PostgreSQL.Simple.ToField
 import Data.Pool
+import Data.Monoid ((<>))
 
 
 oneSecond :: Int
@@ -67,6 +68,13 @@ data Auction = Auction { bid :: Int
 data IStats = IStats { bid' :: S.Seq Int
                      , buyout' :: S.Seq Int
                      } deriving (Eq, Show)
+
+instance Monoid IStats where
+  mempty = IStats S.empty S.empty
+
+  s1 `mappend` s2 = IStats (bid' s1 <> bid' s2) (buyout' s1 <> buyout' s2)
+
+
 
 data WBoxedStats = WBoxedStats { bbid :: Maybe WBox
                                , bbuyout :: Maybe WBox

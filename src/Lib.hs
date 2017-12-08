@@ -105,17 +105,12 @@ aucToIStats a = IStats {bid' = S.replicate (quantity a) (quot  (bid a) (quantity
                        ,buyout' = if buyout a > 0 then S.replicate (quantity a) (quot (buyout a) (quantity a)) else S.empty
                        }
 
-statsConcat :: IStats -> IStats -> IStats
-statsConcat s1 s2 = IStats bi bu
-  where
-    bi = bid' s1 S.>< bid' s2
-    bu = buyout' s1 S.>< buyout' s2
-          
+
 
 --foldl' :: Foldable t => (b -> a -> b) -> b -> t a -> b
 
 collect :: [Auction] -> M.Map Int IStats
-collect = foldl' (\b a -> M.insertWith statsConcat (itemId a) (aucToIStats a) b ) M.empty
+collect = foldl' (\b a -> M.insertWith mappend (itemId a) (aucToIStats a) b ) M.empty
 
 allHttpExHandler :: SomeException -> IO B.ByteString
 allHttpExHandler e = print e *> pure B.empty
