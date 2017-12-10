@@ -38,6 +38,7 @@ import Control.Concurrent.Async
 import Data.Pool
 import Control.Exception
 import Data.Int (Int64)
+import Data.Functor (($>))
 
 
 
@@ -100,7 +101,7 @@ collect :: [Auction] -> M.Map Int IStats
 collect = foldl' (\b a -> M.insertWith mappend (itemId a) (aucToIStats a) b ) M.empty
 
 allHttpExHandler :: SomeException -> IO B.ByteString
-allHttpExHandler e = print e *> pure B.empty
+allHttpExHandler e = print e $> B.empty
 
 updateRealms :: Config -> IO ()
 updateRealms cfg = do
