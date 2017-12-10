@@ -5,7 +5,14 @@
 --{-# LANGUAGE TransformListComp #-}
 --{-# LANGUAGE OverloadedRecordFields #-}
 
-module Lib where
+module Lib (loadLastModified
+           ,updAucJson
+           ,addReqToQ
+           ,runJob
+)
+
+
+where
 import Types.Types
 import Types.Locale
 import DB
@@ -247,16 +254,3 @@ loadLastModified :: Config -> IO ()
 loadLastModified cfg = do
   xs <- readLastModified (connPool cfg)
   putMVar (updatedAt cfg) $ M.fromList xs
-
-myfun :: IO ()
-myfun = do
-  cfg <- readCfg "./config.cfg"
-  withResource (connPool cfg) initMigrations
-  loadLastModified cfg
-  forkIO $ forever $ updAucJson cfg
-  forkIO $ forever $ do 
-    addReqToQ cfg (ReqRealms cfg)
-    threadDelay $ 120 * oneSecond
-  forever $ do
-    forkIO $ runJob cfg
-    threadDelay oneSecond
