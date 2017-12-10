@@ -41,17 +41,8 @@ import Data.Int (Int64)
 
 
 
-trackingItems :: IO TrackingItems
-trackingItems = do
-  res <- itemsDec
-  case res of
-    Left _ -> pure []
-    Right i -> pure $ map iid (items i)
-
-
 parseToBox :: [Int] -> WBox
 parseToBox [i, a, b, c, d, e, f, g] = WBox i a b c d e f g
-
 
 seqToBox :: S.Seq Int -> Maybe WBox
 seqToBox s | S.null s = Nothing
@@ -66,19 +57,6 @@ seqToBox s | S.null s = Nothing
 
 seqStatsToWBoxed :: IStats -> WBoxedStats
 seqStatsToWBoxed s = WBoxedStats (seqToBox $ bid' s) (seqToBox $ buyout' s)
-
-itemsFile :: FilePath
-itemsFile = "items.json"
-
-getItemsJSON :: IO B.ByteString
-getItemsJSON = B.readFile itemsFile
-
-itemsDec ::  IO (Either String ItemS)
-itemsDec = fmap eitherDecode' getItemsJSON
-
-
-
-
 
 aucFilesParser :: Value -> Parser [AucFile]
 aucFilesParser = withObject "aucFilesParser" $ \o -> o .: "files"
@@ -241,7 +219,7 @@ updAucJson cfg = do
       s = slug r
   b <- isActual (updatedAt cfg) s t
   unless b $ do
-    ti <- trackingItems
+    ti <- trackingItems $ connPool cfg
     i <- harvestAuctionJson cfg ti a r
     print i
     case compare i 0 of

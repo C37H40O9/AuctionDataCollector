@@ -20,6 +20,7 @@ module Types.Types ( WBox(..)
                    , ReqParams(..)
                    , DLParams(..)
                    , oneSecond
+                   , SqlE(..)
                    )
   where
 
@@ -36,7 +37,17 @@ import Database.PostgreSQL.Simple.ToRow
 import Database.PostgreSQL.Simple.ToField
 import Data.Pool
 import Data.Monoid ((<>))
+import Control.Exception
+import Data.Typeable
 
+
+
+data SqlE = SqlError
+          | ResultError
+          | QueryError
+          | FormatError deriving (Eq, Show, Typeable)
+
+instance Exception SqlE
 
 oneSecond :: Int
 oneSecond = 1000000

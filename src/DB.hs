@@ -2,7 +2,11 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 --{-# LANGUAGE ExistentialQuantification #-}
 
-module DB (initMigrations, writeBoxInDB, updLastModified, readLastModified)
+module DB (initMigrations
+          ,writeBoxInDB
+          ,updLastModified
+          ,readLastModified
+          ,trackingItems)
   where
 
 import Database.PostgreSQL.Simple
@@ -19,6 +23,7 @@ import Data.Pool
 import Control.Exception
 import Data.Maybe (fromJust)
 import Data.ByteString (ByteString)
+import Data.Functor (($>))
 
 
 
@@ -32,27 +37,29 @@ initMigrations conn = do
     MigrationError reason -> print reason
 
 hSqlWErr' ::(Show a) => a -> IO Int64
-hSqlWErr' e = print e *> pure 0
+hSqlWErr' e = print e $> 0
 
 hSqlRErr' ::(Show a) => a -> IO [(Slug, UTCTime)]
-hSqlRErr' e = print e *> pure []
+hSqlRErr' e = print e $> []
 
-uniqueViolation :: ByteString
-uniqueViolation = "23505"
+--uniqueViolation :: ByteString
+--uniqueViolation = "23505"
 
 hSqlWErr :: [Handler Int64]
-hSqlWErr = [Handler (\ (ex::SqlError) -> hSqlWErr' ex)
-           ,Handler (\ (ex::ResultError) -> hSqlWErr' ex)
-           ,Handler (\ (ex::QueryError) -> hSqlWErr' ex)
-           ,Handler (\ (ex::FormatError) -> hSqlWErr' ex)]
+hSqlWErr =  mkSqlEHandlers hSqlWErr'
 
 hSqlRErr :: [Handler [(Slug, UTCTime)]]
-hSqlRErr = [Handler (\ (ex::SqlError) -> hSqlRErr' ex)
-           ,Handler (\ (ex::ResultError) -> hSqlRErr' ex)
-           ,Handler (\ (ex::QueryError) -> hSqlRErr' ex)
-           ,Handler (\ (ex::FormatError) -> hSqlRErr' ex)]
+hSqlRErr = mkSqlEHandlers hSqlRErr'
+
+hSE' ::(Show a) => a -> IO [Only Int]
+hSE' e = print e $> []
 
 
+mkSqlEHandlers :: (SqlE -> IO b) -> [Handler b]
+mkSqlEHandlers h = [Handler (\(ex::SqlE) -> h ex)]
+
+hSE :: [Handler [Only Int]]
+hSE = mkSqlEHandlers hSE'
 
 writeBoxInDB :: UTCTime -> Slug -> [(Int, WBoxedStats)] -> Pool Connection -> IO Int64
 writeBoxInDB date slug' kv connPool' = do 
@@ -88,3 +95,12 @@ updLastModified date slug' connPool' =  do
 readLastModified :: Pool Connection -> IO [(Slug, UTCTime)]
 readLastModified c = withResource c q `catches` hSqlRErr
   where q conn = query_ conn "select server_slug, upd_date from last_modified"
+
+trackingItems' :: Pool Connection -> IO [Only Int]
+trackingItems' c = withResource c q `catches` hSE
+  where q conn = query_ conn "select item_id from items"
+
+trackingItems :: Pool Connection -> IO TrackingItems
+trackingItems c = do
+  oi <- trackingItems' c
+  pure $ fromOnly <$> oi
