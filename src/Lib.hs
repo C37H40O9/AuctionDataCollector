@@ -100,20 +100,24 @@ aucToIStats a = IStats bid' buyout'
 collect :: [Auction] -> M.Map Int IStats
 collect = foldl' (\b a -> M.insertWith mappend (itemId a) (aucToIStats a) b ) M.empty
 
-allHttpExHandler :: SomeException -> IO B.ByteString
+allHttpExHandler :: C.HttpException -> IO B.ByteString
 allHttpExHandler e = print e $> B.empty
+
+sendRequest :: C.Manager -> C.Request -> IO B.ByteString
+sendRequest m r = runResourceT (C.responseBody <$> C.httpLbs (setRequestIgnoreStatus r) m)
+  `catch` allHttpExHandler
 
 updateRealms :: Config -> IO ()
 updateRealms cfg = do
-  req <- C.parseRequest $ "https://" <> show (region cfg) <> ".api.battle.net/wow/realm/status?locale=" <> show (langLocale cfg) <> "&apikey=" <> apiKey cfg
-  let res = runResourceT $ do
-        response <- C.httpLbs (setRequestIgnoreStatus req) $ manager cfg
-        pure $ C.responseBody response
-  rj <- res `catch` allHttpExHandler
+  req <- C.parseRequest $ "https://" <> show (region cfg)
+      <> ".api.battle.net/wow/realm/status?locale=" <> show (langLocale cfg)
+      <> "&apikey=" <> apiKey cfg
+  rj <- sendRequest (manager cfg) req
   incrCounter $ counter cfg
   case parseRealms rj of 
     Nothing -> pure ()
-    Just x -> addReqsToQ cfg $ S.fromList $ map (ReqAuc cfg ) $ filterRealmsByLocale (filterLocale cfg) $ filterSameRealms x
+    Just x -> addReqsToQ cfg $ S.fromList $ map (ReqAuc cfg )
+            $ filterRealmsByLocale (filterLocale cfg) $ filterSameRealms x
     
 filterItems :: TrackingItems -> [Auction] -> [Auction]
 filterItems ti  = filter (\i -> itemId i `elem` ti)
@@ -128,13 +132,13 @@ filterRealmsByLocale _ [] = []
 filterRealmsByLocale [] rs = rs
 filterRealmsByLocale ls rs = filter (\y -> locale y `elem` ls) rs
 
+
 takeAuctionInfo :: Config -> Realm -> IO ()
 takeAuctionInfo cfg r = do
-  req <- C.parseRequest $  "https://" <> show (region cfg) <> ".api.battle.net/wow/auction/data/" <> slug r <> "?locale=" <> show (langLocale cfg) <> "&apikey=" <> apiKey cfg
-  let res = runResourceT $ do
-        response <- C.httpLbs  (setRequestIgnoreStatus req) $ manager cfg
-        pure $ C.responseBody response
-  aj <- res `catch` allHttpExHandler
+  req <- C.parseRequest $  "https://" <> show (region cfg)
+      <> ".api.battle.net/wow/auction/data/" <> slug r <> "?locale="
+      <> show (langLocale cfg) <> "&apikey=" <> apiKey cfg
+  aj <- sendRequest (manager cfg) req
   incrCounter $ counter cfg
   case parseAucFile aj of
     Nothing -> pure ()
@@ -148,9 +152,7 @@ harvestAuctionJson cfg ti a r = do
       connP = connPool cfg
   putStrLn $ rname r <> " @ " <> show t
   req <- C.parseRequest $ url a
-  aj<-runResourceT $ do 
-    response <- C.httpLbs (setRequestIgnoreStatus req) $ manager cfg
-    pure $ C.responseBody response
+  aj<- sendRequest (manager cfg) req
   case parseAuctions aj of
     Nothing -> pure 0
     Just x -> do
