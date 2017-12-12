@@ -71,14 +71,6 @@ auctionsParser = withObject "auctionsParser" $ \o -> o .: "auctions"
 parseAuctions :: B.ByteString -> Maybe [Auction]
 parseAuctions x = parseMaybe auctionsParser =<< decode x
 
-
-itemsParser :: Value -> Parser [Item]
-itemsParser = withObject "itemsParser" $ \o -> o .: "items"
-
-parseItems :: B.ByteString -> Maybe [Item]
-parseItems x = parseMaybe itemsParser =<< decode x
-
-
 realmsParser :: Value -> Parser [Realm]
 realmsParser = withObject "realmsParser" $ \o -> o .: "realms"
 
