@@ -27,7 +27,7 @@ import Data.List (foldl')
 import Network.HTTP.Client ( setRequestIgnoreStatus)
 import qualified Network.HTTP.Conduit as C
 import Control.Monad.Trans.Resource
-import Control.Monad (forever, unless)
+import Control.Monad (unless)
 import Control.Concurrent.MVar
 import Data.Time.Clock.POSIX
 import Data.Time.Clock
