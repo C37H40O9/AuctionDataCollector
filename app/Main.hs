@@ -7,11 +7,13 @@ import Types.Types
 import Data.Pool
 import Control.Concurrent
 import Control.Monad (forever)
+import ADCOptions
 
 
 main :: IO ()
 main = do
-  cfg <- readCfg "./config.cfg"
+  opts <- options
+  cfg <- readCfg $ config opts
   withResource (connPool cfg) initMigrations
   loadLastModified cfg
   forkIO $ forever $ updAucJson cfg
