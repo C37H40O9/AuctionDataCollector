@@ -79,7 +79,7 @@ data IStats = IStats {bid' :: S.Seq Int
                      ,buyout' :: S.Seq Int} deriving (Eq, Show)
 
 instance Monoid IStats where
-  mempty = IStats S.empty S.empty
+  mempty = IStats mempty mempty
 
   s1 `mappend` s2 = IStats (bid' s1 <> bid' s2) (buyout' s1 <> buyout' s2)
 
