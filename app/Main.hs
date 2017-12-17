@@ -1,13 +1,13 @@
 module Main where
 
-import Lib
-import Config
-import DB
-import Types.Types
+import ADC.Lib
+import ADC.Config
+import ADC.DB
+import ADC.Types.Types
 import Data.Pool
 import Control.Concurrent
 import Control.Monad (forever)
-import ADCOptions
+import ADC.Options
 
 
 main :: IO ()

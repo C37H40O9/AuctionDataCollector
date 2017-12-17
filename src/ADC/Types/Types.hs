@@ -3,7 +3,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Types.Types ( WBox(..)
+module ADC.Types.Types
+                   ( WBox(..)
                    , Item(..)
                    , Auction(..)
                    , IStats(..)
@@ -24,7 +25,7 @@ module Types.Types ( WBox(..)
                    )
   where
 
-import Types.Locale
+import ADC.Types.Locale
 import qualified Data.Sequence as S
 import Data.Aeson
 import qualified Network.HTTP.Conduit as C

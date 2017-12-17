@@ -5,7 +5,7 @@
 --{-# LANGUAGE TransformListComp #-}
 --{-# LANGUAGE OverloadedRecordFields #-}
 
-module Lib (loadLastModified
+module ADC.Lib (loadLastModified
            ,updAucJson
            ,addReqToQ
            ,runJob
@@ -13,10 +13,10 @@ module Lib (loadLastModified
 
 
 where
-import Types.Types
-import Types.Locale
-import DB
-import Config
+import ADC.Types.Types
+import ADC.Types.Locale
+import ADC.DB
+import ADC.Config
 import qualified Data.Map.Strict as M
 import qualified Data.Sequence as S
 import qualified Data.ByteString.Lazy as B

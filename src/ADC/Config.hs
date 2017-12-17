@@ -3,11 +3,11 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Config (readCfg)
+module ADC.Config (readCfg)
   where
 
-import Types.Types
-import Types.Locale
+import ADC.Types.Types
+import ADC.Types.Locale
 import Data.Configurator
 import qualified Data.Sequence as S
 import qualified Data.Map.Strict as M

@@ -1,4 +1,4 @@
-module ADCOptions (options
+module ADC.Options (options
                   ,ADCOptions(..))
 where
 

@@ -2,7 +2,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Types.Locale ( Locale(..) )
+module ADC.Types.Locale ( Locale(..) )
   where
 
 import Prelude hiding (Applicative(..), print)

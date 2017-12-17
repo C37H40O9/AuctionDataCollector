@@ -2,7 +2,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 --{-# LANGUAGE ExistentialQuantification #-}
 
-module DB (initMigrations
+module ADC.DB
+          (initMigrations
           ,writeBoxInDB
           ,updLastModified
           ,readLastModified
@@ -13,7 +14,7 @@ import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.ToField
 import Database.PostgreSQL.Simple.SqlQQ
 import Database.PostgreSQL.Simple.Migration
-import Types.Types
+import ADC.Types.Types
 import Data.Monoid ((<>))
 import Data.Time.Clock.POSIX
 import Data.Time.Clock
