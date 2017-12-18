@@ -56,6 +56,15 @@ executable ADC
                      , resource-pool
   default-language:    Haskell2010
 
+executable ie
+  hs-source-dirs:     app
+  main-is:            ItemEditor.hs
+  ghc-options:        -threaded -rtsopts -with-rtsopts=-N -main-is ItemEditor
+  build-depends:       base
+                     , AuctionDataCollector
+                     , brick
+  default-language:    Haskell2010
+
 test-suite ADC-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
