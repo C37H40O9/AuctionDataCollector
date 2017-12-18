@@ -2,7 +2,7 @@ name:                AuctionDataCollector
 version:             0.1.0.0
 synopsis:            Initial project template from stack
 description:         Please see README.md
-homepage:            https://github.com/gore-v/AuctionDataCollector#readme
+homepage:            https://github.com/C37H40O9/AuctionDataCollector#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Vasily Gorev
@@ -67,4 +67,4 @@ test-suite ADC-test
 
 source-repository head
   type:     git
-  location: https://github.com/gore-v/AuctionDataCollector
+  location: https://github.com/C37H40O9/AuctionDataCollector
