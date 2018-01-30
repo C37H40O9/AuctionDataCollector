@@ -2,6 +2,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE RecordWildCards #-}
 --{-# LANGUAGE TransformListComp #-}
 --{-# LANGUAGE OverloadedRecordFields #-}
 
@@ -43,7 +44,7 @@ import Data.Functor (($>))
 
 
 parseToBox :: [Int] -> WBox
-parseToBox [i, a, b, c, d, e, f, g] = WBox i a b c d e f g
+parseToBox [ic,minW,botW,p25,p50,p75,topW,maxW] = WBox {..} --, a, b, c, d, e, f, g] = WBox i a b c d e f g
 
 seqToBox :: S.Seq Int -> Maybe WBox
 seqToBox s | S.null s = Nothing
