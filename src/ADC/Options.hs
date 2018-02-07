@@ -20,7 +20,7 @@ adcoptions = ADCOptions
           <*> switch
               ( long "daemon"
              <> short 'd'
-             <> help "Run as daemon" )
+             <> help "Run as daemon (not implemmented" )
 
 options = execParser opts
   where

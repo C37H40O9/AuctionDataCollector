@@ -30,7 +30,7 @@ import qualified Data.Sequence as S
 import Data.Aeson
 import qualified Network.HTTP.Conduit as C
 import Control.Concurrent.MVar
-import Control.Concurrent.STM.TChan
+import Control.Concurrent.STM.TQueue
 import Data.Time.Clock
 import qualified Data.Map.Strict as M
 import Database.PostgreSQL.Simple
@@ -98,7 +98,7 @@ data Profession = Alchemy
                 | Engineering
                 | Leatherworking
                 | Blacksmith
-                | Enchanting
+                | EnQueueting
                 | Inscription
                 | Tailoring
                 | Skinning
@@ -129,7 +129,7 @@ data Config = Config {apiKey :: ApiKey
                      ,counter :: MVar Int
                      ,reqQueue :: MVar (S.Seq ReqParams)
                      ,manager :: C.Manager
-                     ,dlChan :: TChan DLParams
+                     ,dlQueue :: TQueue DLParams
                      ,updatedAt :: MVar (M.Map Slug UTCTime)
                      ,connPool :: Pool Connection}
 

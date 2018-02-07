@@ -16,7 +16,7 @@ import qualified Network.HTTP.Conduit as C
 import Control.Concurrent.MVar
 import Data.Time.Clock
 import Control.Monad.STM
-import Control.Concurrent.STM.TChan
+import Control.Concurrent.STM.TQueue
 import Database.PostgreSQL.Simple
 import Data.Pool
 
@@ -36,7 +36,7 @@ readCfg fp = do
   langLocale <- read <$> require apiconf "langLocale" :: IO Locale
   filterLocale <- fmap read <$> require apiconf "filterLocale" :: IO [Locale]
   reqQueue <- newMVar S.empty :: IO (MVar (S.Seq ReqParams))
-  dlChan <- atomically newTChan :: IO (TChan DLParams)
+  dlQueue <- atomically newTQueue :: IO (TQueue DLParams)
   counter <- newMVar apiLimit :: IO (MVar Int)
   updatedAt <- newEmptyMVar :: IO (MVar (M.Map Slug UTCTime))
   manager <- C.newManager C.tlsManagerSettings

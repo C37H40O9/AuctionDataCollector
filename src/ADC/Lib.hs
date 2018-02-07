@@ -34,7 +34,7 @@ import Data.Time.Clock.POSIX
 import Data.Time.Clock
 import Control.Concurrent
 import Control.Monad.STM
-import Control.Concurrent.STM.TChan
+import Control.Concurrent.STM.TQueue
 import Control.Concurrent.Async
 import Data.Pool
 import Control.Exception
@@ -135,7 +135,7 @@ takeAuctionInfo cfg r = do
   incrCounter $ counter cfg
   case parseAucFile aj of
     Nothing -> pure ()
-    Just x ->  atomically $ writeTChan (dlChan cfg) (DLAucJson x r)
+    Just x ->  atomically $ writeTQueue (dlQueue cfg) (DLAucJson x r)
 
 
 harvestAuctionJson :: Config -> TrackingItems -> AucFile -> Realm -> IO Int64
@@ -202,15 +202,15 @@ isActual m s t = do
     Nothing -> pure False
     Just x -> pure $ x >= t
 
-changeUpdTime :: MVar (M.Map Slug UTCTime) -> Slug -> UTCTime  -> IO ()
-changeUpdTime u s t = do
+QueuegeUpdTime :: MVar (M.Map Slug UTCTime) -> Slug -> UTCTime  -> IO ()
+QueuegeUpdTime u s t = do
   u' <- takeMVar u
   putMVar u $ M.insert s t u'
 
 
 updAucJson ::  Config -> IO () 
 updAucJson cfg = do
-  DLAucJson a r <- atomically $ readTChan (dlChan cfg)
+  DLAucJson a r <- atomically $ readTQueue (dlQueue cfg)
   let t = millisToUTC $ lastModified a 
       s = slug r
   b <- isActual (updatedAt cfg) s t
@@ -221,7 +221,7 @@ updAucJson cfg = do
     case compare i 0 of
       GT -> do
         print =<< updLastModified t s (connPool cfg)
-        changeUpdTime (updatedAt cfg) s t
+        QueuegeUpdTime (updatedAt cfg) s t
       _ -> pure ()
 
 loadLastModified :: Config -> IO ()
