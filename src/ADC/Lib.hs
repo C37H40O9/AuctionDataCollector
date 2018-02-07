@@ -202,8 +202,8 @@ isActual m s t = do
     Nothing -> pure False
     Just x -> pure $ x >= t
 
-QueuegeUpdTime :: MVar (M.Map Slug UTCTime) -> Slug -> UTCTime  -> IO ()
-QueuegeUpdTime u s t = do
+changeUpdTime :: MVar (M.Map Slug UTCTime) -> Slug -> UTCTime  -> IO ()
+changeUpdTime u s t = do
   u' <- takeMVar u
   putMVar u $ M.insert s t u'
 
@@ -221,7 +221,7 @@ updAucJson cfg = do
     case compare i 0 of
       GT -> do
         print =<< updLastModified t s (connPool cfg)
-        QueuegeUpdTime (updatedAt cfg) s t
+        changeUpdTime (updatedAt cfg) s t
       _ -> pure ()
 
 loadLastModified :: Config -> IO ()
