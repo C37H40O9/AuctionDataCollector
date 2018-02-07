@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module ADC.Config (readCfg)
   where
@@ -45,13 +46,4 @@ readCfg fp = do
                              ,connectPassword
                              ,connectDatabase}
   connPool <- createPool (connect connInfo) close 1 10 20
-  pure Config {apiKey
-              ,region
-              ,langLocale
-              ,filterLocale
-              ,counter
-              ,reqQueue
-              ,manager
-              ,dlChan
-              ,updatedAt
-              ,connPool}
+  pure Config {..}
